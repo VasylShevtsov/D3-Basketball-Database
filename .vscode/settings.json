@@ -1,0 +1,17 @@
+{
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "previewLimit": 50,
+            "server": "rds-mysql-d3basketball.c5emwoyu6yfv.us-west-1.rds.amazonaws.com",
+            "port": 3306,
+            "driver": "MySQL",
+            "name": "d3basketball-aws",
+            "username": "admin",
+            "database": "d3basketball"
+        }
+    ]
+}
