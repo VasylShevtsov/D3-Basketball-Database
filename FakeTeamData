@@ -1,0 +1,27 @@
+from faker import Faker
+import random
+
+fake = Faker()
+
+# Function to generate a list of dictionaries containing team data
+def generate_teams_data(number_of_teams):
+    teams_data = []
+    for _ in range(number_of_teams):
+        team_data = {
+            'TeamID': random.randint(1, 1000),  # Assuming TeamID is between 1 and 1000
+            'TeamName': fake.company(),  # Using company names as team names for simplicity
+            'Location': fake.city()
+        }
+        teams_data.append(team_data)
+    return teams_data
+
+# Number of synthetic data entries to create
+num_of_teams = 50
+
+# Generate the data
+teams = generate_teams_data(num_of_teams)
+
+# Output to a SQL file
+with open('teams_data.sql', 'w') as f:
+    for team in teams:
+        f.write(f"INSERT INTO Team (TeamID, TeamName, Location) VALUES ({team['TeamID']}, '{team['TeamName']}', '{team['Location']}');\n")
