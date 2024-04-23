@@ -1,4 +1,5 @@
 from faker import Faker
+from datetime import timedelta, datetime
 import random
 
 fake = Faker()
@@ -25,3 +26,43 @@ teams = generate_teams_data(num_of_teams)
 with open('teams_data.sql', 'w') as f:
     for team in teams:
         f.write(f"INSERT INTO Team (TeamID, TeamName, Location) VALUES ({team['TeamID']}, '{team['TeamName']}', '{team['Location']}');\n")
+
+# Generating Game Data
+existing_team_ids = [team['TeamID'] for team in teams]  # Use the list generated from the previous step
+
+# Function to generate unique game pairings
+def generate_unique_game_pairings(team_ids, number_of_games):
+    games_data = []
+    
+    for _ in range(number_of_games):
+        home_team = random.choice(team_ids)
+        away_team = home_team
+        while away_team == home_team:
+            away_team = random.choice(team_ids)
+        
+        game_date = fake.date_between(start_date='-2y', end_date='today')
+        home_score = random.randint(50, 150)  # Random score between 50 and 150
+        away_score = random.randint(50, 150)
+
+        game_data = {
+            'HomeTeamID': home_team,
+            'AwayTeamID': away_team,
+            'GameDate': game_date,
+            'HomeScore': home_score,
+            'AwayScore': away_score
+        }
+        
+        games_data.append(game_data)
+    
+    return games_data
+
+# Generate synthetic games data
+number_of_games = 100  # Number of games you want to generate
+games = generate_unique_game_pairings(existing_team_ids, number_of_games)
+
+# Output to a SQL file
+with open('games_data.sql', 'w') as f:
+    game_id = 1  # Starting game ID
+    for game in games:
+        f.write(f"INSERT INTO Game (GameID, HomeTeamID, AwayTeamID, Date, HomeScore, AwayScore) VALUES ({game_id}, {game['HomeTeamID']}, {game['AwayTeamID']}, '{game['GameDate']}', {game['HomeScore']}, {game['AwayScore']});\n")
+        game_id += 1
