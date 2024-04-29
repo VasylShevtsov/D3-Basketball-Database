@@ -54,3 +54,22 @@ BEGIN
 END$$
 
 DELIMITER ;
+
+
+-- Insert Player Procedure
+CREATE PROCEDURE InsertPlayer(
+    IN p_FirstName VARCHAR(40),
+    IN p_LastName VARCHAR(40),
+    IN p_TeamID SMALLINT,
+    IN p_Position VARCHAR(30),
+    IN p_HeightInches TINYINT,
+    IN p_Weight SMALLINT,
+    IN p_HighSchool VARCHAR(40)
+)
+BEGIN
+    INSERT INTO Player (FirstName, LastName, TeamID, Position, HeightInches, Weight, HighSchool)
+    VALUES (p_FirstName, p_LastName, p_TeamID, p_Position, p_HeightInches, p_Weight, p_HighSchool);
+END;
+
+
+
