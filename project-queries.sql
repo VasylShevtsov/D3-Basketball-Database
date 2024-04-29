@@ -1,4 +1,5 @@
-CREATE PROCEDURE VerifyPlayerPoints()
+-- VerifyPoints Procedure
+CREATE PROCEDURE VerifyPoints()
 BEGIN
     DECLARE done INT DEFAULT FALSE;
     DECLARE playerIdVar SMALLINT;
@@ -33,7 +34,7 @@ END;
 
 
 -- Insert Player Procedure
-CREATE PROCEDURE InsertPlayer(
+CREATE PROCEDURE NewPlayer(
     IN p_FirstName VARCHAR(40),
     IN p_LastName VARCHAR(40),
     IN p_TeamID SMALLINT,
