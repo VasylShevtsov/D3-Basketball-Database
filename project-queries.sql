@@ -80,3 +80,51 @@ BEGIN
     DELETE FROM Player
     WHERE PlayerID = p_PlayerID;
 END;
+
+
+--Update Player Procedure
+CREATE PROCEDURE UpdatePlayer(
+    IN p_PlayerID SMALLINT,
+    IN p_FirstName VARCHAR(40),
+    IN p_LastName VARCHAR(40),
+    IN p_TeamID SMALLINT,
+    IN p_Position VARCHAR(30),
+    IN p_HeightInches TINYINT,
+    IN p_Weight SMALLINT,
+    IN p_HighSchool VARCHAR(40)
+)
+BEGIN
+    UPDATE Player
+    SET FirstName = p_FirstName,
+        LastName = p_LastName,
+        TeamID = p_TeamID,
+        Position = p_Position,
+        HeightInches = p_HeightInches,
+        Weight = p_Weight,
+        HighSchool = p_HighSchool
+    WHERE PlayerID = p_PlayerID;
+END;
+
+--Get Player Stats Procedure
+CREATE PROCEDURE GetPlayerStats(
+    IN p_PlayerID SMALLINT,
+    IN p_GameID SMALLINT
+)
+BEGIN
+    SELECT *
+    FROM PlayerGameStatistic
+    WHERE PlayerID = p_PlayerID AND GameID = p_GameID;
+END;
+
+
+--Get Team Stats Procedure
+CREATE PROCEDURE GetTeamStats(
+    IN p_TeamID SMALLINT,
+    IN p_GameID SMALLINT
+)
+BEGIN
+    SELECT *
+    FROM TeamGameStatistic
+    WHERE TeamID = p_TeamID AND GameID = p_GameID;
+END;
+
