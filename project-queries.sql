@@ -72,4 +72,11 @@ BEGIN
 END;
 
 
-
+--Delete Player Procedure
+CREATE PROCEDURE DeletePlayer(
+    IN p_PlayerID SMALLINT
+)
+BEGIN
+    DELETE FROM Player
+    WHERE PlayerID = p_PlayerID;
+END;
