@@ -1,5 +1,3 @@
-DELIMITER $$
-
 CREATE PROCEDURE VerifyPlayerPoints()
 BEGIN
     DECLARE done INT DEFAULT FALSE;
@@ -28,32 +26,10 @@ BEGIN
         IF done THEN
             LEAVE read_loop;
         END IF;
-        
-        -- Calculate total points for player in the game
-        SELECT SUM(Points) INTO playerPointsVar
-        FROM PlayerGameStatistic
-        WHERE PlayerID = playerIdVar AND GameID = gameIdVar;
-        
-        -- Get total points for the team in the game
-        SELECT TotalPoints INTO teamPointsVar
-        FROM TeamGameStatistic
-        WHERE TeamID = teamIdVar AND GameID = gameIdVar;
-        
-        -- Compare total points for player and team
-        IF playerPointsVar != teamPointsVar THEN
-            -- Handle the discrepancy (e.g., log or raise error)
-            -- For example, you can print the details of the discrepancy
-            SELECT CONCAT('Discrepancy found for PlayerID: ', playerIdVar, ', GameID: ', gameIdVar) AS Message;
-            SELECT CONCAT('Player Points: ', playerPointsVar, ', Team Points: ', teamPointsVar) AS Points_Info;
-        END IF;
-    END LOOP;
+    END LOOP read_loop;
     
-    -- Close cursor
     CLOSE cur;
-    
-END$$
-
-DELIMITER ;
+END;
 
 
 -- Insert Player Procedure
@@ -72,7 +48,7 @@ BEGIN
 END;
 
 
---Delete Player Procedure
+-- Delete Player Procedure
 CREATE PROCEDURE DeletePlayer(
     IN p_PlayerID SMALLINT
 )
@@ -82,7 +58,7 @@ BEGIN
 END;
 
 
---Update Player Procedure
+-- Update Player Procedure
 CREATE PROCEDURE UpdatePlayer(
     IN p_PlayerID SMALLINT,
     IN p_FirstName VARCHAR(40),
@@ -105,7 +81,7 @@ BEGIN
     WHERE PlayerID = p_PlayerID;
 END;
 
---Get Player Stats Procedure
+-- Get Player Stats Procedure
 CREATE PROCEDURE GetPlayerStats(
     IN p_PlayerID SMALLINT,
     IN p_GameID SMALLINT
@@ -117,7 +93,7 @@ BEGIN
 END;
 
 
---Get Team Stats Procedure
+-- Get Team Stats Procedure
 CREATE PROCEDURE GetTeamStats(
     IN p_TeamID SMALLINT,
     IN p_GameID SMALLINT
