@@ -1,3 +1,6 @@
+-- Title: D3 Basketball Database
+-- Authors: Aidan Von Buchwaldt, Basil Shevtsov, and Jai Deshpande
+
 INSERT INTO Game (GameID, HomeTeamID, AwayTeamID, Date, HomeScore, AwayScore) VALUES (1, 248, 305, '2024-01-07', 130, 79);
 INSERT INTO Game (GameID, HomeTeamID, AwayTeamID, Date, HomeScore, AwayScore) VALUES (2, 297, 915, '2023-03-26', 66, 137);
 INSERT INTO Game (GameID, HomeTeamID, AwayTeamID, Date, HomeScore, AwayScore) VALUES (3, 969, 845, '2022-06-30', 94, 98);

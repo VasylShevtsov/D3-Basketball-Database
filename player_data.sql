@@ -1,3 +1,6 @@
+-- Title: D3 Basketball Database
+-- Authors: Aidan Von Buchwaldt, Basil Shevtsov, and Jai Deshpande
+
 INSERT INTO Player (PlayerID, TeamID, FirstName, LastName, Position, HeightInches, Weight, HighSchool) VALUES (6977, 2, 'Luis', 'Garcia', 'Center', 69, 225, 'Rios, Harvey and Rosales');
 INSERT INTO Player (PlayerID, TeamID, FirstName, LastName, Position, HeightInches, Weight, HighSchool) VALUES (2491, 83, 'Kyle', 'Adams', 'Guard', 84, 210, 'Butler, Page and Miles');
 INSERT INTO Player (PlayerID, TeamID, FirstName, LastName, Position, HeightInches, Weight, HighSchool) VALUES (4622, 58, 'Joel', 'Rios', 'Center', 85, 218, 'Jones, Taylor and Camacho');
