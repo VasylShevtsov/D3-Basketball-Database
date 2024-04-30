@@ -1,3 +1,6 @@
+-- Title: D3 Basketball Database
+-- Authors: Aidan Von Buchwaldt, Basil Shevtsov, and Jai Deshpande
+
 INSERT INTO Team (TeamID, TeamName, Location) VALUES (424, 'Phillips, Lee and Carter', 'Port Linda');
 INSERT INTO Team (TeamID, TeamName, Location) VALUES (721, 'Hensley, Edwards and Donovan', 'New Stephaniefort');
 INSERT INTO Team (TeamID, TeamName, Location) VALUES (554, 'Arroyo-Stark', 'East Ryanbury');

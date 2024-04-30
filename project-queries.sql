@@ -1,3 +1,6 @@
+-- Title: D3 Basketball Database
+-- Authors: Aidan Von Buchwaldt, Basil Shevtsov, and Jai Deshpande
+
 -- VerifyPoints Procedure
 CREATE PROCEDURE VerifyPoints()
 BEGIN
@@ -16,7 +19,6 @@ BEGIN
     
     -- Declare handler for cursor
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
-    
     -- Open cursor
     OPEN cur;
     

@@ -1,3 +1,6 @@
+-- Title: D3 Basketball Database
+-- Authors: Aidan Von Buchwaldt, Basil Shevtsov, and Jai Deshpande
+
 CREATE TABLE Team (
   TeamID SMALLINT PRIMARY KEY,
   TeamName VARCHAR(40) UNIQUE,
