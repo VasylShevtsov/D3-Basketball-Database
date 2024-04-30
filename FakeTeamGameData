@@ -9,7 +9,7 @@ def generate_teams_data(number_of_teams):
     teams_data = []
     for _ in range(number_of_teams):
         team_data = {
-            'TeamID': random.randint(1, 1000),  # Assuming TeamID is between 1 and 1000
+            'TeamID': random.randint(1, 100),  # Assuming TeamID is between 1 and 1000
             'TeamName': fake.company(),  # Using company names as team names for simplicity
             'Location': fake.city()
         }
