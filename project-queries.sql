@@ -2,6 +2,7 @@
 -- Authors: Aidan Von Buchwaldt, Basil Shevtsov, and Jai Deshpande
 
 -- VerifyPoints Procedure
+DROP PROCEDURE IF EXISTS VerifyPoints;
 CREATE PROCEDURE VerifyPoints()
 BEGIN
     DECLARE done INT DEFAULT FALSE;
