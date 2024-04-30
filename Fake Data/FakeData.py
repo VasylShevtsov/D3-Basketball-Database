@@ -98,41 +98,41 @@ def generate_player_game_statistics(players_data, games, num_players_per_game=10
         
         # Generate statistics for each participating player
         for player in participating_home_players + participating_away_players:
-            points = random.randint(0, 30)
-            assists = random.randint(0, 10)
-            rebounds = random.randint(0, 15)
-            offensive_rebounds = random.randint(0, rebounds)
-            defensive_rebounds = rebounds - offensive_rebounds
             field_goals_made = random.randint(0, 12)
             field_goals_attempted = random.randint(field_goals_made, 20)
             three_pointers_made = random.randint(0, 7)
             three_pointers_attempted = random.randint(three_pointers_made, 15)
             free_throws_made = random.randint(0, 8)
             free_throws_attempted = random.randint(free_throws_made, 10)
+            personal_fouls = random.randint(0, 6)
+            rebounds = random.randint(0, 15)
+            offensive_rebounds = random.randint(0, rebounds)
+            defensive_rebounds = rebounds - offensive_rebounds
+            assists = random.randint(0, 10)
             steals = random.randint(0, 5)
             blocks = random.randint(0, 5)
             turnovers = random.randint(0, 7)
-            personal_fouls = random.randint(0, 6)
+            points = field_goals_made * 2 + three_pointers_made * 3 + free_throws_made
             minutes_played = random.randint(5, 40)
 
             stat = {
                 'PlayerID': player['PlayerID'],
                 'GameID': game['GameID'],
-                'Points': points,
-                'Assists': assists,
-                'Rebounds': rebounds,
-                'OffensiveRebounds': offensive_rebounds,
-                'DefensiveRebounds': defensive_rebounds,
                 'FieldGoalsMade': field_goals_made,
                 'FieldGoalsAttempted': field_goals_attempted,
                 'ThreePointersMade': three_pointers_made,
                 'ThreePointersAttempted': three_pointers_attempted,
                 'FreeThrowsMade': free_throws_made,
                 'FreeThrowsAttempted': free_throws_attempted,
+                'PersonalFouls': personal_fouls,
+                'Rebounds': rebounds,
+                'OffensiveRebounds': offensive_rebounds,
+                'DefensiveRebounds': defensive_rebounds,
+                'Assists': assists,
                 'Steals': steals,
                 'Blocks': blocks,
                 'Turnovers': turnovers,
-                'PersonalFouls': personal_fouls,
+                'Points': points,
                 'MinutesPlayed': minutes_played
             }
             player_game_stats.append(stat)
@@ -145,19 +145,20 @@ player_game_stats = generate_player_game_statistics(players_data, games, num_pla
 # Output to a SQL file
 with open('player_game_stats_data.sql', 'w') as f:
     for stat in player_game_stats:
-        f.write(f"INSERT INTO PlayerGameStatistic (PlayerID, GameID, Points, Assists, Rebounds, OffensiveRebounds, "
-                f"DefensiveRebounds, FieldGoalsMade, FieldGoalsAttempted, ThreePointersMade, ThreePointersAttempted, "
-                f"FreeThrowsMade, FreeThrowsAttempted, Steals, Blocks, Turnovers, PersonalFouls, MinutesPlayed) "
-                f"VALUES ({stat['PlayerID']}, {stat['GameID']}, {stat['Points']}, {stat['Assists']}, {stat['Rebounds']}, "
-                f"{stat['OffensiveRebounds']}, {stat['DefensiveRebounds']}, {stat['FieldGoalsMade']}, "
+        f.write(f"INSERT INTO PlayerGameStatistic (PlayerID, GameID, FieldGoalsMade, FieldGoalsAttempted, "
+                f"ThreePointersMade, ThreePointersAttempted, FreeThrowsMade, FreeThrowsAttempted, PersonalFouls, "
+                f"Rebounds, OffensiveRebounds, DefensiveRebounds, Assists, Steals, Blocks, Turnovers, Points, "
+                f"MinutesPlayed) VALUES ({stat['PlayerID']}, {stat['GameID']}, {stat['FieldGoalsMade']}, "
                 f"{stat['FieldGoalsAttempted']}, {stat['ThreePointersMade']}, {stat['ThreePointersAttempted']}, "
-                f"{stat['FreeThrowsMade']}, {stat['FreeThrowsAttempted']}, {stat['Steals']}, {stat['Blocks']}, "
-                f"{stat['Turnovers']}, {stat['PersonalFouls']}, {stat['MinutesPlayed']});\n")
+                f"{stat['FreeThrowsMade']}, {stat['FreeThrowsAttempted']}, {stat['PersonalFouls']}, "
+                f"{stat['Rebounds']}, {stat['OffensiveRebounds']}, {stat['DefensiveRebounds']}, {stat['Assists']}, {stat['Steals']}, "
+                f"{stat['Blocks']}, {stat['Turnovers']}, {stat['Points']}, {stat['MinutesPlayed']});\n")
+
         
 def generate_team_game_statistics(games, player_game_stats):
     team_game_stats = []
     for game in games:
-        # Separate player stats by home and away teams
+        # Filter player stats by home and away teams based on the current game
         home_team_stats = [stat for stat in player_game_stats if stat['GameID'] == game['GameID'] and stat['PlayerID'] in [player['PlayerID'] for player in players_data if player['TeamID'] == game['HomeTeamID']]]
         away_team_stats = [stat for stat in player_game_stats if stat['GameID'] == game['GameID'] and stat['PlayerID'] in [player['PlayerID'] for player in players_data if player['TeamID'] == game['AwayTeamID']]]
 
@@ -165,11 +166,13 @@ def generate_team_game_statistics(games, player_game_stats):
         def aggregate_stats(team_stats):
             aggregated = {
                 'FreeThrowsMade': sum(stat['FreeThrowsMade'] for stat in team_stats),
+                'FreeThrowsAttempted': sum(stat['FreeThrowsAttempted'] for stat in team_stats),
                 'FieldGoalsMade': sum(stat['FieldGoalsMade'] for stat in team_stats),
                 'FieldGoalsAttempted': sum(stat['FieldGoalsAttempted'] for stat in team_stats),
                 'ThreePointersMade': sum(stat['ThreePointersMade'] for stat in team_stats),
                 'ThreePointersAttempted': sum(stat['ThreePointersAttempted'] for stat in team_stats),
                 'PersonalFouls': sum(stat['PersonalFouls'] for stat in team_stats),
+                'Rebounds': sum(stat['Rebounds'] for stat in team_stats),
                 'OffensiveRebounds': sum(stat['OffensiveRebounds'] for stat in team_stats),
                 'DefensiveRebounds': sum(stat['DefensiveRebounds'] for stat in team_stats),
                 'Assists': sum(stat['Assists'] for stat in team_stats),
@@ -184,12 +187,12 @@ def generate_team_game_statistics(games, player_game_stats):
         home_aggregated_stats = aggregate_stats(home_team_stats)
         away_aggregated_stats = aggregate_stats(away_team_stats)
 
-        # Add to the overall list
+        # Append aggregated data for each team
         team_game_stats.append({
             'TeamID': game['HomeTeamID'],
             'GameID': game['GameID'],
             'HomeOrAway': 'Home',
-            'Opponent': game['AwayTeamID'],
+            'Opponent': str(game['AwayTeamID']),
             **home_aggregated_stats
         })
 
@@ -197,7 +200,7 @@ def generate_team_game_statistics(games, player_game_stats):
             'TeamID': game['AwayTeamID'],
             'GameID': game['GameID'],
             'HomeOrAway': 'Away',
-            'Opponent': game['HomeTeamID'],
+            'Opponent': str(game['HomeTeamID']),
             **away_aggregated_stats
         })
 
@@ -206,13 +209,16 @@ def generate_team_game_statistics(games, player_game_stats):
 # Generate team game statistics
 team_game_stats = generate_team_game_statistics(games, player_game_stats)
 
+# Generate team game statistics
+team_game_stats = generate_team_game_statistics(games, player_game_stats)
+
 # Output to a SQL file
 with open('team_game_stats_data.sql', 'w') as f:
     for stat in team_game_stats:
-        f.write(f"INSERT INTO TeamGameStats (TeamID, GameID, HomeOrAway, FreeThrowsMade, Opponent, FieldGoalsMade, "
-                f"FieldGoalsAttempted, ThreePointersMade, ThreePointersAttempted, PersonalFouls, OffensiveRebounds, "
-                f"DefensiveRebounds, Assists, Steals, Blocks, Turnovers, TotalPoints) VALUES "
-                f"({stat['TeamID']}, {stat['GameID']}, '{stat['HomeOrAway']}', {stat['FreeThrowsMade']}, '{stat['Opponent']}', "
-                f"{stat['FieldGoalsMade']}, {stat['FieldGoalsAttempted']}, {stat['ThreePointersMade']}, {stat['ThreePointersAttempted']}, "
-                f"{stat['PersonalFouls']}, {stat['OffensiveRebounds']}, {stat['DefensiveRebounds']}, {stat['Assists']}, "
-                f"{stat['Steals']}, {stat['Blocks']}, {stat['Turnovers']}, {stat['TotalPoints']});\n")
+        f.write(f"INSERT INTO TeamGameStatistic (TeamID, GameID, HomeOrAway, Opponent, FieldGoalsMade, "
+                f"FieldGoalsAttempted, ThreePointersMade, ThreePointersAttempted, FreeThrowsMade, FreeThrowsAttempted, "
+                f"PersonalFouls, Rebounds, OffensiveRebounds, DefensiveRebounds, Assists, Steals, Blocks, Turnovers, TotalPoints) "
+                f"VALUES ({stat['TeamID']}, {stat['GameID']}, '{stat['HomeOrAway']}', {stat['Opponent']}, {stat['FieldGoalsMade']}, "
+                f"{stat['FieldGoalsAttempted']}, {stat['ThreePointersMade']}, {stat['ThreePointersAttempted']}, {stat['FreeThrowsMade']}, "
+                f"{stat['FreeThrowsAttempted']}, {stat['PersonalFouls']}, {stat['Rebounds']}, {stat['OffensiveRebounds']}, {stat['DefensiveRebounds']}, "
+                f"{stat['Assists']}, {stat['Steals']}, {stat['Blocks']}, {stat['Turnovers']}, {stat['TotalPoints']});\n")
