@@ -12,12 +12,12 @@ BEGIN
   -- Calculate the total points scored by players in the given game
   SELECT SUM(FieldGoalsMade * 2 + ThreePointersMade * 3 + FreeThrowsMade) INTO PlayerPoints
   FROM PlayerGameStatistic
-  WHERE GameID = GameID AND PlayerID IN (SELECT PlayerID FROM Player WHERE TeamID = TeamID);
+  WHERE GameID = GameID AND PlayerID IN (SELECT PlayerID FROM Player WHERE TeamID = TeamID) LIMIT 1;
 
   -- Fetch the team's recorded total points from the game's stats
   SELECT TotalPoints INTO TeamTotalPoints
   FROM TeamGameStatistic
-  WHERE GameID = GameID AND TeamID = TeamID;
+  WHERE GameID = GameID AND TeamID = TeamID LIMIT 1;
 
   -- Compare the points
   IF PlayerPoints IS NULL THEN
