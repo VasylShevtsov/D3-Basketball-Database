@@ -148,3 +148,31 @@ BEGIN
     JOIN Team t ON tg.TeamID = t.TeamID
     WHERE tg.GameID = p_GameID;
 END;
+
+
+-- Get Player's Three Point Percentage Procedure
+DROP PROCEDURE IF EXISTS GetPlayerSeasonAverages;
+CREATE PROCEDURE GetPlayerSeasonAverages(
+    IN p_PlayerID SMALLINT
+)
+BEGIN
+    SELECT 
+        AVG(FieldGoalsMade) AS AvgFieldGoalsMade,
+        AVG(FieldGoalsAttempted) AS AvgFieldGoalsAttempted,
+        AVG(ThreePointersMade) AS AvgThreePointersMade,
+        AVG(ThreePointersAttempted) AS AvgThreePointersAttempted,
+        AVG(FreeThrowsMade) AS AvgFreeThrowsMade,
+        AVG(FreeThrowsAttempted) AS AvgFreeThrowsAttempted,
+        AVG(PersonalFouls) AS AvgPersonalFouls,
+        AVG(Rebounds) AS AvgRebounds,
+        AVG(OffensiveRebounds) AS AvgOffensiveRebounds,
+        AVG(DefensiveRebounds) AS AvgDefensiveRebounds,
+        AVG(Assists) AS AvgAssists,
+        AVG(Steals) AS AvgSteals,
+        AVG(Blocks) AS AvgBlocks,
+        AVG(Turnovers) AS AvgTurnovers,
+        AVG(Points) AS AvgPoints,
+        AVG(MinutesPlayed) AS AvgMinutesPlayed
+    FROM PlayerGameStatistic
+    WHERE PlayerID = p_PlayerID;
+END;
