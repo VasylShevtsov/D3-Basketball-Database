@@ -3,40 +3,43 @@
 
 -- VerifyPoints Procedure
 DROP PROCEDURE IF EXISTS VerifyPoints;
-CREATE PROCEDURE VerifyPoints()
+CREATE PROCEDURE VerifyPoints(IN GameID SMALLINT, IN TeamID SMALLINT)
 BEGIN
-    DECLARE done INT DEFAULT FALSE;
-    DECLARE playerIdVar SMALLINT;
-    DECLARE gameIdVar SMALLINT;
-    DECLARE teamIdVar SMALLINT;
-    DECLARE teamPointsVar SMALLINT;
-    DECLARE playerPointsVar SMALLINT;
-    
-    -- Declare cursor to iterate through PlayerGameStatistic
-    DECLARE cur CURSOR FOR 
-        SELECT pg.PlayerID, pg.GameID, p.TeamID
-        FROM PlayerGameStatistic pg
-        INNER JOIN Player p ON pg.PlayerID = p.PlayerID;
-    
-    -- Declare handler for cursor
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
-    -- Open cursor
-    OPEN cur;
-    
-    -- Loop through PlayerGameStatistic
-    read_loop: LOOP
-        -- Fetch values from cursor
-        FETCH cur INTO playerIdVar, gameIdVar, teamIdVar;
-        IF done THEN
-            LEAVE read_loop;
-        END IF;
-    END LOOP read_loop;
-    
-    CLOSE cur;
+  DECLARE PlayerPoints INT;
+  DECLARE TeamTotalPoints INT;
+  DECLARE ErrorMsg VARCHAR(255);
+
+  -- Calculate the total points scored by players in the given game
+  SELECT SUM(FieldGoalsMade * 2 + ThreePointersMade * 3 + FreeThrowsMade) INTO PlayerPoints
+  FROM PlayerGameStatistic
+  WHERE GameID = GameID AND PlayerID IN (SELECT PlayerID FROM Player WHERE TeamID = TeamID);
+
+  -- Fetch the team's recorded total points from the game's stats
+  SELECT TotalPoints INTO TeamTotalPoints
+  FROM TeamGameStatistic
+  WHERE GameID = GameID AND TeamID = TeamID;
+
+  -- Compare the points
+  IF PlayerPoints IS NULL THEN
+    SET PlayerPoints = 0;
+  END IF;
+
+  IF TeamTotalPoints IS NULL THEN
+    SET ErrorMsg = CONCAT('No team total points found for TeamID: ', TeamID, ' and GameID: ', GameID);
+    SELECT ErrorMsg AS Error;
+  ELSE
+    IF PlayerPoints != TeamTotalPoints THEN
+      SET ErrorMsg = CONCAT('Mismatch in points! Player total: ', PlayerPoints, ' vs Team total: ', TeamTotalPoints);
+      SELECT ErrorMsg AS Error;
+    ELSE
+      SELECT 'Points are consistent!' AS Message;
+    END IF;
+  END IF;
 END;
 
 
 -- Insert Player Procedure
+DROP PROCEDURE IF EXISTS NewPlayer;
 CREATE PROCEDURE NewPlayer(
     IN p_FirstName VARCHAR(40),
     IN p_LastName VARCHAR(40),
@@ -53,6 +56,7 @@ END;
 
 
 -- Delete Player Procedure
+DROP PROCEDURE IF EXISTS DeletePlayer;
 CREATE PROCEDURE DeletePlayer(
     IN p_PlayerID SMALLINT
 )
@@ -63,6 +67,7 @@ END;
 
 
 -- Update Player Procedure
+DROP PROCEDURE IF EXISTS UpdatePlayer;
 CREATE PROCEDURE UpdatePlayer(
     IN p_PlayerID SMALLINT,
     IN p_FirstName VARCHAR(40),
@@ -86,6 +91,7 @@ BEGIN
 END;
 
 -- Get Player Stats Procedure
+DROP PROCEDURE IF EXISTS GetPlayerStats;
 CREATE PROCEDURE GetPlayerStats(
     IN p_PlayerID SMALLINT,
     IN p_GameID SMALLINT
@@ -98,6 +104,7 @@ END;
 
 
 -- Get Team Stats Procedure
+DROP PROCEDURE IF EXISTS GetTeamStats;
 CREATE PROCEDURE GetTeamStats(
     IN p_TeamID SMALLINT,
     IN p_GameID SMALLINT
