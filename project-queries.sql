@@ -1,40 +1,41 @@
 -- Title: D3 Basketball Database
 -- Authors: Aidan Von Buchwaldt, Basil Shevtsov, and Jai Deshpande
 
--- VerifyPoints Procedure
+
+-- verify points procedure
 DROP PROCEDURE IF EXISTS VerifyPoints;
-CREATE PROCEDURE VerifyPoints(IN GameID SMALLINT, IN TeamID SMALLINT)
+CREATE PROCEDURE VerifyPoints(IN p_GameID SMALLINT, IN p_TeamID SMALLINT)
 BEGIN
-  DECLARE PlayerPoints INT;
-  DECLARE TeamTotalPoints INT;
-  DECLARE ErrorMsg VARCHAR(255);
+    DECLARE PlayerPoints INT;
+    DECLARE TeamTotalPoints INT;
+    DECLARE ErrorMsg VARCHAR(255);
 
-  -- Calculate the total points scored by players in the given game
-  SELECT SUM(FieldGoalsMade * 2 + ThreePointersMade * 3 + FreeThrowsMade) INTO PlayerPoints
-  FROM PlayerGameStatistic
-  WHERE GameID = GameID AND PlayerID IN (SELECT PlayerID FROM Player WHERE TeamID = TeamID) LIMIT 1;
+    -- Calculate the total points scored by players in the given game
+    SELECT SUM(COALESCE(FieldGoalsMade * 2 + ThreePointersMade * 3 + FreeThrowsMade, 0)) INTO PlayerPoints
+    FROM PlayerGameStatistic
+    WHERE GameID = p_GameID AND PlayerID IN (SELECT PlayerID FROM Player WHERE TeamID = p_TeamID);
 
-  -- Fetch the team's recorded total points from the game's stats
-  SELECT TotalPoints INTO TeamTotalPoints
-  FROM TeamGameStatistic
-  WHERE GameID = GameID AND TeamID = TeamID LIMIT 1;
+    -- Fetch the team's recorded total points from the game's stats
+    SELECT TotalPoints INTO TeamTotalPoints
+    FROM TeamGameStatistic
+    WHERE GameID = p_GameID AND TeamID = p_TeamID;
 
-  -- Compare the points
-  IF PlayerPoints IS NULL THEN
-    SET PlayerPoints = 0;
-  END IF;
-
-  IF TeamTotalPoints IS NULL THEN
-    SET ErrorMsg = CONCAT('No team total points found for TeamID: ', TeamID, ' and GameID: ', GameID);
-    SELECT ErrorMsg AS Error;
-  ELSE
-    IF PlayerPoints != TeamTotalPoints THEN
-      SET ErrorMsg = CONCAT('Mismatch in points! Player total: ', PlayerPoints, ' vs Team total: ', TeamTotalPoints);
-      SELECT ErrorMsg AS Error;
-    ELSE
-      SELECT 'Points are consistent!' AS Message;
+    -- Compare the points
+    IF PlayerPoints IS NULL THEN
+        SET PlayerPoints = 0;
     END IF;
-  END IF;
+
+    IF TeamTotalPoints IS NULL THEN
+        SET ErrorMsg = CONCAT('No team total points found for TeamID: ', p_TeamID, ' and GameID: ', p_GameID);
+        SELECT ErrorMsg AS Error;
+    ELSE
+        IF PlayerPoints != TeamTotalPoints THEN
+            SET ErrorMsg = CONCAT('Mismatch in points! Player total: ', PlayerPoints, ' vs Team total: ', TeamTotalPoints);
+            SELECT ErrorMsg AS Error;
+        ELSE
+            SELECT 'Points are consistent!' AS Message;
+        END IF;
+    END IF;
 END;
 
 
