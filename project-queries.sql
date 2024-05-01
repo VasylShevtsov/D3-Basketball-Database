@@ -150,7 +150,7 @@ BEGIN
 END;
 
 
--- Get Player's Three Point Percentage Procedure
+-- Get Player's Season Averages Procedure
 DROP PROCEDURE IF EXISTS GetPlayerSeasonAverages;
 CREATE PROCEDURE GetPlayerSeasonAverages(
     IN p_PlayerID SMALLINT
