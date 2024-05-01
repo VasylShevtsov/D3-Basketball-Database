@@ -115,3 +115,34 @@ BEGIN
     WHERE TeamID = p_TeamID AND GameID = p_GameID;
 END;
 
+
+-- Get Team Stats From Game Procedure
+DROP PROCEDURE IF EXISTS GetBothTeamStats;
+CREATE PROCEDURE GetBothTeamStats(
+    IN p_GameID SMALLINT
+)
+BEGIN
+    SELECT 
+        tg.TeamID,
+        tg.HomeOrAway,
+        tg.Opponent,
+        tg.FieldGoalsMade,
+        tg.FieldGoalsAttempted,
+        tg.ThreePointersMade,
+        tg.ThreePointersAttempted,
+        tg.FreeThrowsMade,
+        tg.FreeThrowsAttempted,
+        tg.PersonalFouls,
+        tg.Rebounds,
+        tg.OffensiveRebounds,
+        tg.DefensiveRebounds,
+        tg.Assists,
+        tg.Steals,
+        tg.Blocks,
+        tg.Turnovers,
+        tg.TotalPoints,
+        t.TeamName
+    FROM TeamGameStatistic tg
+    JOIN Team t ON tg.TeamID = t.TeamID
+    WHERE tg.GameID = p_GameID;
+END;
