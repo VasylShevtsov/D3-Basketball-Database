@@ -3,6 +3,7 @@
 
 
 -- verify points procedure
+-- Finds if there is a discrepancy between the total points scored by players on a team and the total points recorded for the team in a game
 DROP PROCEDURE IF EXISTS VerifyPoints;
 CREATE PROCEDURE VerifyPoints(IN p_GameID SMALLINT, IN p_TeamID SMALLINT)
 BEGIN
@@ -91,7 +92,7 @@ BEGIN
     WHERE PlayerID = p_PlayerID;
 END;
 
--- Get Player Stats Procedure
+-- Get Player Stats From Specific Game Procedure
 DROP PROCEDURE IF EXISTS GetPlayerStats;
 CREATE PROCEDURE GetPlayerStats(
     IN p_PlayerID SMALLINT,
@@ -104,7 +105,7 @@ BEGIN
 END;
 
 
--- Get Team Stats Procedure
+-- Get Team Stats From Specific Game Procedure
 DROP PROCEDURE IF EXISTS GetTeamStats;
 CREATE PROCEDURE GetTeamStats(
     IN p_TeamID SMALLINT,
@@ -117,7 +118,7 @@ BEGIN
 END;
 
 
--- Get Team Stats From Game Procedure
+-- Get Both Teams Stats From Specific Game Procedure
 DROP PROCEDURE IF EXISTS GetBothTeamStats;
 CREATE PROCEDURE GetBothTeamStats(
     IN p_GameID SMALLINT
