@@ -196,3 +196,22 @@ BEGIN
     LIMIT p_Limit;
 END;
 
+
+-- Get All Games Played By a Team Procedure
+DROP PROCEDURE IF EXISTS GetTeamGameHistory;
+CREATE PROCEDURE GetTeamGameHistory(
+    IN p_TeamID SMALLINT
+)
+BEGIN
+    SELECT 
+        g.GameID,
+        g.Date,
+        t.TeamName AS Opponent,
+        tg.HomeOrAway,
+        tg.TotalPoints
+    FROM TeamGameStatistic tg
+    JOIN Game g ON tg.GameID = g.GameID
+    JOIN Team t ON t.TeamID = CASE WHEN tg.HomeOrAway = 'Away' THEN tg.TeamID ELSE tg.Opponent END
+    WHERE tg.TeamID = p_TeamID
+    ORDER BY g.Date;
+END;
