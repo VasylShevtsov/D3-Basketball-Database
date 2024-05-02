@@ -45,3 +45,20 @@ BEGIN
     WHERE PlayerID IN (p_PlayerID1, p_PlayerID2)
     GROUP BY PlayerID;
 END;
+
+CREATE PROCEDURE MVPofTheSeason(IN p_SeasonYear INT)
+BEGIN
+    SELECT 
+        PlayerID,
+        SUM(Points) AS TotalPoints,
+        SUM(Assists) AS TotalAssists,
+        SUM(Rebounds) AS TotalRebounds,
+        SUM(Steals) AS TotalSteals,
+        SUM(Blocks) AS TotalBlocks
+    FROM PlayerGameStatistic
+    JOIN Game ON PlayerGameStatistic.GameID = Game.GameID
+    WHERE YEAR(Game.Date) = p_SeasonYear
+    GROUP BY PlayerID
+    ORDER BY SUM(Points) DESC
+    LIMIT 5;
+END;
