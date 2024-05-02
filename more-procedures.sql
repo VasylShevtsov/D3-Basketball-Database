@@ -62,3 +62,14 @@ BEGIN
     ORDER BY SUM(Points) DESC
     LIMIT 5;
 END;
+
+CREATE PROCEDURE TrackPlayerEfficiency(IN p_PlayerID SMALLINT)
+BEGIN
+    SELECT 
+        YEAR(Game.Date) AS Season,
+        AVG((Points + Rebounds + Assists + Steals + Blocks - (FieldGoalsAttempted - FieldGoalsMade) - (FreeThrowsAttempted - FreeThrowsMade) - Turnovers) / MinutesPlayed) AS EfficiencyRating
+    FROM PlayerGameStatistic
+    JOIN Game ON PlayerGameStatistic.GameID = Game.GameID
+    WHERE PlayerID = p_PlayerID
+    GROUP BY YEAR(Game.Date);
+END;
