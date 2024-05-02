@@ -177,25 +177,6 @@ BEGIN
     WHERE PlayerID = p_PlayerID;
 END;
 
--- Get Top Scorers From a Specific Game Procedure
-DROP PROCEDURE IF EXISTS GetTopScorersInGame;
-CREATE PROCEDURE GetTopScorersInGame(
-    IN p_GameID SMALLINT,
-    IN p_Limit INT DEFAULT 5
-)
-BEGIN
-    SELECT 
-        p.PlayerID,
-        p.FirstName,
-        p.LastName,
-        ps.Points
-    FROM PlayerGameStatistic ps
-    JOIN Player p ON ps.PlayerID = p.PlayerID
-    WHERE ps.GameID = p_GameID
-    ORDER BY ps.Points DESC
-    LIMIT p_Limit;
-END;
-
 
 -- Get All Games Played By a Team Procedure
 DROP PROCEDURE IF EXISTS GetTeamGameHistory;
