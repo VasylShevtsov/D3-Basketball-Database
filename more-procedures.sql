@@ -73,3 +73,17 @@ BEGIN
     WHERE PlayerID = p_PlayerID
     GROUP BY YEAR(Game.Date);
 END;
+
+
+CREATE PROCEDURE AnalyzeTeamImpact(IN p_PlayerID SMALLINT, IN p_SeasonYear INT)
+BEGIN
+    SELECT 
+        GameID,
+        IF(PlayerID = p_PlayerID, 'Played', 'Not Played') AS PlayerParticipation,
+        SUM(TotalPoints) OVER (PARTITION BY GameID) AS TeamPointsWithPlayer,
+        AVG(TotalPoints) OVER (PARTITION BY PlayerParticipation) AS AvgTeamPoints
+    FROM TeamGameStatistic
+    JOIN Game ON TeamGameStatistic.GameID = Game.GameID
+    LEFT JOIN PlayerGameStatistic ON TeamGameStatistic.GameID = PlayerGameStatistic.GameID AND PlayerGameStatistic.PlayerID = p_PlayerID
+    WHERE YEAR(Game.Date) = p_SeasonYear;
+END;
