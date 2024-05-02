@@ -87,3 +87,18 @@ BEGIN
     LEFT JOIN PlayerGameStatistic ON TeamGameStatistic.GameID = PlayerGameStatistic.GameID AND PlayerGameStatistic.PlayerID = p_PlayerID
     WHERE YEAR(Game.Date) = p_SeasonYear;
 END;
+
+
+CREATE PROCEDURE OptimizeRoster(IN p_GameID SMALLINT)
+BEGIN
+    SELECT 
+        tg.TeamID,
+        p.PlayerID,
+        SUM(ps.Points + ps.Assists + ps.Rebounds + ps.Steals + ps.Blocks - ps.Turnovers) AS ContributionScore
+    FROM PlayerGameStatistic ps
+    JOIN Player p ON ps.PlayerID = p.PlayerID
+    JOIN TeamGameStatistic tg ON ps.GameID = tg.GameID AND p.TeamID = tg.TeamID
+    WHERE ps.GameID = p_GameID
+    GROUP BY tg.TeamID, p.PlayerID
+    ORDER BY ContributionScore DESC;
+END;
