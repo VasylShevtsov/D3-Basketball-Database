@@ -92,6 +92,7 @@ BEGIN
     WHERE PlayerID = p_PlayerID;
 END;
 
+
 -- Get Player Stats From Specific Game Procedure
 DROP PROCEDURE IF EXISTS GetPlayerStats;
 CREATE PROCEDURE GetPlayerStats(
@@ -196,6 +197,7 @@ BEGIN
     WHERE tg.TeamID = p_TeamID
     ORDER BY g.Date;
 END;
+
 
 -- Get Team Season Statistics Procedure
 DROP PROCEDURE IF EXISTS GetTeamSeasonStatistics;
