@@ -6,6 +6,7 @@
         -- https://www.tutorialspoint.com/mysql/mysql_declare_handler_statement.htm
     -- MySQL SIGNAL statement:
         -- https://www.tutorialspoint.com/How-can-we-use-SIGNAL-statement-with-MySQL-triggers
+    -- Basketball efficiency rating: https://en.wikipedia.org/wiki/Efficiency_(basketball)
 
 
 -- Verify Points Procedure
@@ -373,18 +374,30 @@ BEGIN
     LIMIT 5;
 END;
 
--- Find the efficiency rating of a player
+-- Find the efficiency rating of a player for an academic year
+-- Formula: (PTS + REB + AST + STL + BLK − Missed FG − Missed FT - TO) / GP
+-- See Wikipedia page for efficiency ratings: https://en.wikipedia.org/wiki/Efficiency_(basketball)
 DROP PROCEDURE IF EXISTS TrackPlayerEfficiency;
-CREATE PROCEDURE TrackPlayerEfficiency(IN p_PlayerID SMALLINT)
+CREATE PROCEDURE TrackPlayerEfficiency(IN p_PlayerID SMALLINT, IN p_StartYear INT)
 BEGIN
     SELECT 
-        YEAR(Game.Date) AS Season,
-        AVG((Points + Rebounds + Assists + Steals + Blocks - (FieldGoalsAttempted - FieldGoalsMade) - (FreeThrowsAttempted - FreeThrowsMade) - Turnovers) / MinutesPlayed) AS EfficiencyRating
+        CONCAT(p_StartYear, '-', p_StartYear + 1) AS Season,
+        SUM(
+            Points + Rebounds + Assists + Steals + Blocks 
+            - (FieldGoalsAttempted - FieldGoalsMade)
+            - (FreeThrowsAttempted - FreeThrowsMade)
+            - Turnovers
+        ) / COUNT(GameID) AS EfficiencyRating
     FROM PlayerGameStatistic
     JOIN Game ON PlayerGameStatistic.GameID = Game.GameID
-    WHERE PlayerID = p_PlayerID
-    GROUP BY YEAR(Game.Date);
+    WHERE PlayerID = p_PlayerID AND (
+        (MONTH(Game.Date) >= 9 AND YEAR(Game.Date) = p_StartYear) OR
+        (MONTH(Game.Date) <= 5 AND YEAR(Game.Date) = p_StartYear + 1)
+    )
+    GROUP BY CONCAT(p_StartYear, '-', p_StartYear + 1);
 END;
+
+
 
 
 -- Finds the impact of a player on their team's performance
