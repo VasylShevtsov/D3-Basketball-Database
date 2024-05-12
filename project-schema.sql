@@ -57,7 +57,6 @@ CREATE TABLE TeamGameStatistic (
   TeamID SMALLINT,
   GameID SMALLINT,
   HomeOrAway ENUM('Home', 'Away'),
-  Opponent VARCHAR(40),
   FieldGoalsMade SMALLINT,
   FieldGoalsAttempted SMALLINT,
   ThreePointersMade SMALLINT,
