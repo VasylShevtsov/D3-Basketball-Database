@@ -95,6 +95,8 @@ CREATE PROCEDURE UpdatePlayer(
     IN p_HighSchool VARCHAR(40)
 )
 BEGIN
+    DECLARE affected_rows INT;
+
     UPDATE Player
     SET FirstName = p_FirstName,
         LastName = p_LastName,
@@ -104,6 +106,15 @@ BEGIN
         Weight = p_Weight,
         HighSchool = p_HighSchool
     WHERE PlayerID = p_PlayerID;
+
+    -- Check for the number of rows affected by the update, and give feedback on the result of the operation
+    SET affected_rows = ROW_COUNT(); -- ROW_COUNT() returns the number of rows affected by the last statement (it should be just one row in this case)
+
+    IF affected_rows = 0 THEN
+        SELECT 'No player updated. Check if PlayerID exists.' AS Message;
+    ELSE
+        SELECT CONCAT('Updated ', affected_rows, ' player(s).') AS Message;
+    END IF;
 END;
 
 
