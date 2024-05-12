@@ -5,6 +5,7 @@
         -- https://www.mysqltutorial.org/mysql-stored-procedure/mysql-declare-handler/
         -- https://www.tutorialspoint.com/mysql/mysql_declare_handler_statement.htm
 
+
 -- Verify Points Procedure
 -- Finds if there is a discrepancy between the total points scored by players on a team and the total points recorded for the team in a game
 DROP PROCEDURE IF EXISTS VerifyPoints;
@@ -153,18 +154,10 @@ CREATE PROCEDURE GetBothTeamStats(
     IN p_GameID SMALLINT
 )
 BEGIN
-    DECLARE rowCount INT DEFAULT 0;
-
     SELECT t.TeamName, tg.*
     FROM TeamGameStatistic tg
     JOIN Team t ON tg.TeamID = t.TeamID
     WHERE tg.GameID = p_GameID;
-
-    SELECT FOUND_ROWS() INTO rowCount;
-
-    IF rowCount = 0 THEN
-        SELECT CONCAT('No statistics found for game with GameID ', p_GameID, '.') AS Message;
-    END IF;
 END;
 
 
