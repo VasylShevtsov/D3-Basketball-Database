@@ -10,45 +10,6 @@
     -- Player Impact Estimate (PIE): https://www.nbastuffer.com/analytics101/player-impact-estimate-pie/
     -- NBA terminology glossary: https://www.nba.com/stats/help/glossary
 
-
--- Verify Points Procedure
--- Finds if there is a discrepancy between the total points scored by players on a team and the total points recorded for the team in a game
-DROP PROCEDURE IF EXISTS VerifyPoints;
-CREATE PROCEDURE VerifyPoints(IN p_GameID SMALLINT, IN p_TeamID SMALLINT)
-BEGIN
-    DECLARE PlayerPoints INT DEFAULT 0;
-    DECLARE TeamTotalPoints INT DEFAULT 0;
-
-    -- Calculate the total points scored by players in the given game
-    SELECT SUM(COALESCE(FieldGoalsMade * 2 + ThreePointersMade * 3 + FreeThrowsMade, 0)) INTO PlayerPoints
-    FROM PlayerGameStatistic
-    WHERE GameID = p_GameID AND PlayerID IN (SELECT PlayerID FROM Player WHERE TeamID = p_TeamID);
-
-    -- Fetch the team's recorded total points from the game's stats
-    SELECT COALESCE(TotalPoints, 0) INTO TeamTotalPoints
-    FROM TeamGameStatistic
-    WHERE GameID = p_GameID AND TeamID = p_TeamID;
-
-    -- Check for nulls and mismatch
-    IF PlayerPoints = 0 THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = CONCAT('Error: Player points total returns zero or null for TeamID: ', p_TeamID, ', GameID: ', p_GameID);
-    END IF;
-
-    IF TeamTotalPoints = 0 THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = CONCAT('Error: Team total points return zero or null for TeamID: ', p_TeamID, ', GameID: ', p_GameID);
-    ELSE
-        IF PlayerPoints != TeamTotalPoints THEN
-            SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = CONCAT('Error: Mismatch in points! Player total: ', PlayerPoints, ' vs Team total: ', TeamTotalPoints);
-        ELSE
-            SELECT 'Points are consistent!' AS Message;
-        END IF;
-    END IF;
-END;
-
-
 -- Insert Player Procedure
 DROP PROCEDURE IF EXISTS NewPlayer;
 CREATE PROCEDURE NewPlayer(
@@ -612,6 +573,43 @@ BEGIN
         )
     GROUP BY t.TeamID
     ORDER BY Wins DESC, PointDifferential DESC;
+END;
+
+-- Verify Points Procedure
+-- Finds if there is a discrepancy between the total points scored by players on a team and the total points recorded for the team in a game
+DROP PROCEDURE IF EXISTS VerifyPoints;
+CREATE PROCEDURE VerifyPoints(IN p_GameID SMALLINT, IN p_TeamID SMALLINT)
+BEGIN
+    DECLARE PlayerPoints INT DEFAULT 0;
+    DECLARE TeamTotalPoints INT DEFAULT 0;
+
+    -- Calculate the total points scored by players in the given game
+    SELECT SUM(COALESCE(FieldGoalsMade * 2 + ThreePointersMade * 3 + FreeThrowsMade, 0)) INTO PlayerPoints
+    FROM PlayerGameStatistic
+    WHERE GameID = p_GameID AND PlayerID IN (SELECT PlayerID FROM Player WHERE TeamID = p_TeamID);
+
+    -- Fetch the team's recorded total points from the game's stats
+    SELECT COALESCE(TotalPoints, 0) INTO TeamTotalPoints
+    FROM TeamGameStatistic
+    WHERE GameID = p_GameID AND TeamID = p_TeamID;
+
+    -- Check for nulls and mismatch
+    IF PlayerPoints = 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = CONCAT('Error: Player points total returns zero or null for TeamID: ', p_TeamID, ', GameID: ', p_GameID);
+    END IF;
+
+    IF TeamTotalPoints = 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = CONCAT('Error: Team total points return zero or null for TeamID: ', p_TeamID, ', GameID: ', p_GameID);
+    ELSE
+        IF PlayerPoints != TeamTotalPoints THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = CONCAT('Error: Mismatch in points! Player total: ', PlayerPoints, ' vs Team total: ', TeamTotalPoints);
+        ELSE
+            SELECT 'Points are consistent!' AS Message;
+        END IF;
+    END IF;
 END;
 
 -- Trigger to log player deletions
