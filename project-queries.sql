@@ -612,6 +612,104 @@ BEGIN
     END IF;
 END;
 
+-- Verify All Stats Procedure
+-- Finds discrepancies between all major statistical totals recorded for players and those recorded for their teams in a game
+DROP PROCEDURE IF EXISTS VerifyAllStatsDetailed;
+CREATE PROCEDURE VerifyAllStatsDetailed(IN p_GameID SMALLINT, IN p_TeamID SMALLINT)
+BEGIN
+    DECLARE PlayerFGMade, PlayerFGAttempted, Player3PMade, Player3PAttempted, PlayerFTMade, PlayerFTAttempted,
+            PlayerFouls, PlayerRebounds, PlayerOffRebounds, PlayerDefRebounds, PlayerAssists, PlayerSteals,
+            PlayerBlocks, PlayerTurnovers, PlayerPoints INT DEFAULT 0;
+
+    DECLARE TeamFGMade, TeamFGAttempted, Team3PMade, Team3PAttempted, TeamFTMade, TeamFTAttempted,
+            TeamFouls, TeamRebounds, TeamOffRebounds, TeamDefRebounds, TeamAssists, TeamSteals,
+            TeamBlocks, TeamTurnovers, TeamPoints INT DEFAULT 0;
+
+    -- Calculate all player stats totals in the given game for the specified team
+    SELECT
+        SUM(COALESCE(FieldGoalsMade, 0)), SUM(COALESCE(FieldGoalsAttempted, 0)),
+        SUM(COALESCE(ThreePointersMade, 0)), SUM(COALESCE(ThreePointersAttempted, 0)),
+        SUM(COALESCE(FreeThrowsMade, 0)), SUM(COALESCE(FreeThrowsAttempted, 0)),
+        SUM(COALESCE(PersonalFouls, 0)), SUM(COALESCE(Rebounds, 0)),
+        SUM(COALESCE(OffensiveRebounds, 0)), SUM(COALESCE(DefensiveRebounds, 0)),
+        SUM(COALESCE(Assists, 0)), SUM(COALESCE(Steals, 0)),
+        SUM(COALESCE(Blocks, 0)), SUM(COALESCE(Turnovers, 0)),
+        SUM(COALESCE(Points, 0))
+    INTO
+        PlayerFGMade, PlayerFGAttempted, Player3PMade, Player3PAttempted, PlayerFTMade, PlayerFTAttempted,
+        PlayerFouls, PlayerRebounds, PlayerOffRebounds, PlayerDefRebounds, PlayerAssists, PlayerSteals,
+        PlayerBlocks, PlayerTurnovers, PlayerPoints
+    FROM PlayerGameStatistic
+    WHERE GameID = p_GameID AND PlayerID IN (SELECT PlayerID FROM Player WHERE TeamID = p_TeamID);
+
+    -- Fetch all team stats totals from the game's statistics
+    SELECT
+        COALESCE(FieldGoalsMade, 0), COALESCE(FieldGoalsAttempted, 0),
+        COALESCE(ThreePointersMade, 0), COALESCE(ThreePointersAttempted, 0),
+        COALESCE(FreeThrowsMade, 0), COALESCE(FreeThrowsAttempted, 0),
+        COALESCE(PersonalFouls, 0), COALESCE(Rebounds, 0),
+        COALESCE(OffensiveRebounds, 0), COALESCE(DefensiveRebounds, 0),
+        COALESCE(Assists, 0), COALESCE(Steals, 0),
+        COALESCE(Blocks, 0), COALESCE(Turnovers, 0),
+        COALESCE(TotalPoints, 0)
+    INTO
+        TeamFGMade, TeamFGAttempted, Team3PMade, Team3PAttempted, TeamFTMade, TeamFTAttempted,
+        TeamFouls, TeamRebounds, TeamOffRebounds, TeamDefRebounds, TeamAssists, TeamSteals,
+        TeamBlocks, TeamTurnovers, TeamPoints
+    FROM TeamGameStatistic
+    WHERE GameID = p_GameID AND TeamID = p_TeamID;
+
+    IF PlayerFGMade != TeamFGMade THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Mismatch in Field Goals Made';
+    ELSEIF PlayerFGAttempted != TeamFGAttempted THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Mismatch in Field Goals Attempted';
+    ELSEIF Player3PMade != Team3PMade THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Mismatch in Three Pointers Made';
+    ELSEIF Player3PAttempted != Team3PAttempted THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Mismatch in Three Pointers Attempted';
+    ELSEIF PlayerFTMade != TeamFTMade THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Mismatch in Free Throws Made';
+    ELSEIF PlayerFTAttempted != TeamFTAttempted THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Mismatch in Free Throws Attempted';
+    ELSEIF PlayerFouls != TeamFouls THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Mismatch in Personal Fouls';
+    ELSEIF PlayerRebounds != TeamRebounds THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Mismatch in Total Rebounds';
+    ELSEIF PlayerOffRebounds != TeamOffRebounds THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Mismatch in Offensive Rebounds';
+    ELSEIF PlayerDefRebounds != TeamDefRebounds THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Mismatch in Defensive Rebounds';
+    ELSEIF PlayerAssists != TeamAssists THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Mismatch in Assists';
+    ELSEIF PlayerSteals != TeamSteals THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Mismatch in Steals';
+    ELSEIF PlayerBlocks != TeamBlocks THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Mismatch in Blocks';
+    ELSEIF PlayerTurnovers != TeamTurnovers THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Mismatch in Turnovers';
+    ELSEIF PlayerPoints != TeamPoints THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Mismatch in Total Points';
+    ELSE
+        SELECT 'All statistics are consistent!' AS Message;
+    END IF;
+END;
+
+
 -- Trigger to log player deletions
 DROP TRIGGER IF EXISTS LogDeletePlayer;
 CREATE TRIGGER LogDeletePlayer
