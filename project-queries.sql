@@ -454,7 +454,7 @@ BEGIN
     DECLARE v_GameID SMALLINT;
     DECLARE done INT DEFAULT FALSE;
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
-
+    
     OPEN cur;
     game_loop: LOOP
         FETCH cur INTO v_GameID;
@@ -536,23 +536,6 @@ BEGIN
     -- Calculate the winning percentage when the player scores above their average for the season
     SELECT IF(games_played = 0, NULL, (games_won / games_played) * 100) AS WinningImpactPercentage;
 END
-
-
--- Finds the optimal roster for a given game
-DROP PROCEDURE IF EXISTS OptimizeRoster;
-CREATE PROCEDURE OptimizeRoster(IN p_GameID SMALLINT)
-BEGIN
-    SELECT 
-        tg.TeamID,
-        p.PlayerID,
-        SUM(ps.Points + ps.Assists + ps.Rebounds + ps.Steals + ps.Blocks - ps.Turnovers) AS ContributionScore
-    FROM PlayerGameStatistic ps
-    JOIN Player p ON ps.PlayerID = p.PlayerID
-    JOIN TeamGameStatistic tg ON ps.GameID = tg.GameID AND p.TeamID = tg.TeamID
-    WHERE ps.GameID = p_GameID
-    GROUP BY tg.TeamID, p.PlayerID
-    ORDER BY ContributionScore DESC;
-END;
 
 -- Get Top Scorers From a Specific Game Procedure
 DROP PROCEDURE IF EXISTS GetTopScorersInGame;
