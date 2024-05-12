@@ -4,6 +4,8 @@
     -- MySQL Error Handling: 
         -- https://www.mysqltutorial.org/mysql-stored-procedure/mysql-declare-handler/
         -- https://www.tutorialspoint.com/mysql/mysql_declare_handler_statement.htm
+    -- MySQL SIGNAL statement:
+        -- https://www.tutorialspoint.com/How-can-we-use-SIGNAL-statement-with-MySQL-triggers
 
 
 -- Verify Points Procedure
