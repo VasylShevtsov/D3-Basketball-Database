@@ -2,12 +2,12 @@
 -- Authors: Aidan Von Buchwaldt, Basil Shevtsov, and Jai Deshpande
 
 
--- verify points procedure
+-- Verify Points Procedure
 -- Finds if there is a discrepancy between the total points scored by players on a team and the total points recorded for the team in a game
 DROP PROCEDURE IF EXISTS VerifyPoints;
 CREATE PROCEDURE VerifyPoints(IN p_GameID SMALLINT, IN p_TeamID SMALLINT)
 BEGIN
-    DECLARE PlayerPoints INT;
+    DECLARE PlayerTotalPoints INT;
     DECLARE TeamTotalPoints INT;
     DECLARE ErrorMsg VARCHAR(255);
 
@@ -23,15 +23,16 @@ BEGIN
 
     -- Compare the points
     IF PlayerPoints IS NULL THEN
-        SET PlayerPoints = 0;
+        SET ErrorMsg = CONCAT('Error: Player points total returns null for TeamID: ', p_TeamID, ' and GameID: ', p_GameID);
+        SELECT ErrorMsg AS Error;
     END IF;
 
     IF TeamTotalPoints IS NULL THEN
-        SET ErrorMsg = CONCAT('No team total points found for TeamID: ', p_TeamID, ' and GameID: ', p_GameID);
+        SET ErrorMsg = CONCAT('Error: TeamTotalPoints returns null for TeamID: ', p_TeamID, ' and GameID: ', p_GameID);
         SELECT ErrorMsg AS Error;
     ELSE
         IF PlayerPoints != TeamTotalPoints THEN
-            SET ErrorMsg = CONCAT('Mismatch in points! Player total: ', PlayerPoints, ' vs Team total: ', TeamTotalPoints);
+            SET ErrorMsg = CONCAT('Error: Mismatch in points! Player total: ', PlayerPoints, ' vs Team total: ', TeamTotalPoints);
             SELECT ErrorMsg AS Error;
         ELSE
             SELECT 'Points are consistent!' AS Message;
