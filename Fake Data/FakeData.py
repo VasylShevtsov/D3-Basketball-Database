@@ -1,9 +1,10 @@
 from faker import Faker
+from datetime import datetime, timedelta
 import random
 
 fake = Faker()
 
-# generate a list of dictionaries containing team data
+# function to generate a list of dictionaries containing team data
 def generate_teams_data(number_of_teams):
     teams_data = []
     for i in range(number_of_teams):
@@ -15,16 +16,14 @@ def generate_teams_data(number_of_teams):
         teams_data.append(team_data)
     return teams_data
 
-
 num_of_teams = 100
 teams = generate_teams_data(num_of_teams)
 team_ids = [team['TeamID'] for team in teams]
-
 with open('teams_data.sql', 'w') as f:
     for team in teams:
         f.write(f"INSERT INTO Team (TeamID, TeamName, Location) VALUES ({team['TeamID']}, '{team['TeamName']}', '{team['Location']}');\n")
 
-# Function to generate synthetic player data
+# function to generate synthetic player data
 def generate_players_data(number_of_players, team_ids):
     players_data = []
     for _ in range(number_of_players):
@@ -42,48 +41,52 @@ def generate_players_data(number_of_players, team_ids):
 
 num_of_players = num_of_teams * 15 # 15 players per team
 players_data = generate_players_data(num_of_players, team_ids)
-
-# Output to a SQL file
 with open('player_data.sql', 'w') as f:
     for player in players_data:
         f.write(f"INSERT INTO Player (PlayerID, TeamID, FirstName, LastName, Position, HeightInches, Weight, HighSchool) "
                 f"VALUES ({player['PlayerID']}, {player['TeamID']}, '{player['FirstName']}', '{player['LastName']}', "
                 f"'{player['Position']}', {player['HeightInches']}, {player['Weight']}, '{player['HighSchool']}');\n")
 
-
-# Function to generate unique game pairings with GameID included
-def generate_unique_game_pairings(team_ids, number_of_games):
+# function to generatie game pairings
+def generate_unique_game_pairings(team_ids, number_of_games_per_year, years=4):
     games_data = []
-    
-    for game_id in range(1, number_of_games + 1):  # Start GameID at 1 and increment within the loop
-        home_team = random.choice(team_ids)
-        away_team = home_team
-        while away_team == home_team:
-            away_team = random.choice(team_ids)
-        
-        game_date = fake.date_between(start_date='-2y', end_date='today')
+    current_year = datetime.now().year
 
-        game_data = {
-            'GameID': game_id,  # Assign the GameID here
-            'HomeTeamID': home_team,
-            'AwayTeamID': away_team,
-            'GameDate': game_date,
-        }
-        
-        games_data.append(game_data)
+    for year in range(current_year - years, current_year + 1):
+        for _ in range(number_of_games_per_year):
+            home_team = random.choice(team_ids)
+            away_team = home_team
+            while away_team == home_team:
+                away_team = random.choice(team_ids)
+
+            # Generate month within the academic year (August to May)
+            month = random.choice([8, 9, 10, 11, 12, 1, 2, 3, 4, 5])
+            if month > 7:  # For months August to December, the year is current
+                game_year = year
+            else:  # For months January to May, the year should increment
+                game_year = year + 1
+
+            day = random.randint(1, 28)
+            game_date = datetime(game_year, month, day)
+
+            game_id = len(games_data) + 1
+            game_data = {
+                'GameID': game_id,
+                'HomeTeamID': home_team,
+                'AwayTeamID': away_team,
+                'GameDate': game_date.strftime('%Y-%m-%d'),
+            }
+            
+            games_data.append(game_data)
     
     return games_data
 
-# Generate synthetic games data
-number_of_games = 100  # Number of games you want to generate
-games = generate_unique_game_pairings(team_ids, number_of_games)
-
-# Output to a SQL file
+games = generate_unique_game_pairings(team_ids=team_ids, number_of_games_per_year=6, years=4)
 with open('games_data.sql', 'w') as f:
     for game in games:
         f.write(f"INSERT INTO Game (GameID, HomeTeamID, AwayTeamID, Date) VALUES ({game['GameID']}, {game['HomeTeamID']}, {game['AwayTeamID']}, '{game['GameDate']}');\n")
 
-        
+
 # Function to generate player game statistics
 def generate_player_game_statistics(players_data, games, num_players_per_game=10):
     player_game_stats = []
@@ -139,10 +142,8 @@ def generate_player_game_statistics(players_data, games, num_players_per_game=10
 
     return player_game_stats
 
-# Generate player game statistics
-player_game_stats = generate_player_game_statistics(players_data, games, num_players_per_game=10)
 
-# Output to a SQL file
+player_game_stats = generate_player_game_statistics(players_data, games, num_players_per_game=10)
 with open('player_game_stats_data.sql', 'w') as f:
     for stat in player_game_stats:
         f.write(f"INSERT INTO PlayerGameStatistic (PlayerID, GameID, FieldGoalsMade, FieldGoalsAttempted, "
@@ -154,7 +155,7 @@ with open('player_game_stats_data.sql', 'w') as f:
                 f"{stat['Rebounds']}, {stat['OffensiveRebounds']}, {stat['DefensiveRebounds']}, {stat['Assists']}, {stat['Steals']}, "
                 f"{stat['Blocks']}, {stat['Turnovers']}, {stat['Points']}, {stat['MinutesPlayed']});\n")
 
-        
+# Function to generate team game statistics
 def generate_team_game_statistics(games, player_game_stats):
     team_game_stats = []
     for game in games:
@@ -204,10 +205,8 @@ def generate_team_game_statistics(games, player_game_stats):
 
     return team_game_stats
 
-# Generate team game statistics
-team_game_stats = generate_team_game_statistics(games, player_game_stats)
 
-# Output to a SQL file
+team_game_stats = generate_team_game_statistics(games, player_game_stats)
 with open('team_game_stats_data.sql', 'w') as f:
     for stat in team_game_stats:
         f.write(f"INSERT INTO TeamGameStatistic (TeamID, GameID, HomeOrAway, FieldGoalsMade, "
