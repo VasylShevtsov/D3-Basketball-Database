@@ -23,7 +23,7 @@ def generate_teams_data(number_of_teams):
         teams_data.append(team_data)
     return teams_data
 
-num_of_teams = 100
+num_of_teams = 25
 teams = generate_teams_data(num_of_teams)
 team_ids = [team['TeamID'] for team in teams]
 with open('teams_data.sql', 'w') as f:
@@ -46,7 +46,7 @@ def generate_players_data(number_of_players, team_ids):
         })
     return players_data
 
-num_of_players = num_of_teams * 15 # 15 players per team
+num_of_players = num_of_teams * 10
 players_data = generate_players_data(num_of_players, team_ids)
 with open('player_data.sql', 'w') as f:
     for player in players_data:
@@ -61,6 +61,7 @@ def generate_unique_game_pairings(team_ids, games_per_team_per_year, years):
     
     current_year = datetime.now().year
     start_year = current_year - years
+    game_id = 1
 
     for year in range(start_year, current_year + 1):
         for team in team_ids:
@@ -77,12 +78,12 @@ def generate_unique_game_pairings(team_ids, games_per_team_per_year, years):
                 game_date = datetime(game_year, month, day)
                 
                 game_data = {
-                    'GameID': f'{year}-{team}-{game_number + 1}',
+                    'GameID': game_id,
                     'HomeTeamID': team,
                     'AwayTeamID': opponent,
                     'GameDate': game_date.strftime('%Y-%m-%d'),
                 }
-                
+                game_id += 1
                 games_data.append(game_data)
     return games_data
 
