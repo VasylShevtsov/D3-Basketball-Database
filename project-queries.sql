@@ -22,19 +22,6 @@ CREATE PROCEDURE NewPlayer(
     IN p_HighSchool VARCHAR(40)
 )
 BEGIN
-    -- Error handling to manage cases where the insert might fail
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK;
-        -- Get error details
-        GET DIAGNOSTICS CONDITION 1 
-            @sql_state = RETURNED_SQLSTATE, @err_no = MYSQL_ERRNO, @msg_text = MESSAGE_TEXT;
-        -- Make the error message
-        SET @full_error = CONCAT('Error ', @err_no, ' (SQLState ', @sql_state, '): ', @msg_text);
-        -- Return the error message
-        SELECT @full_error AS Error_Message;
-    END;
-
     INSERT INTO Player (FirstName, LastName, TeamID, Position, HeightInches, Weight, HighSchool)
     VALUES (p_FirstName, p_LastName, p_TeamID, p_Position, p_HeightInches, p_Weight, p_HighSchool);
 END;
