@@ -320,30 +320,34 @@ BEGIN
     END IF;
 END;
 
--- Get Two Player's Season Statistics And Compare Procedure
-DROP PROCEDURE IF EXISTS ComparePlayers;
-CREATE PROCEDURE ComparePlayers(IN p_PlayerID1 SMALLINT, IN p_PlayerID2 SMALLINT)
+-- Get Two Player's Season Averages for Academic Year (using the start year)
+DROP PROCEDURE IF EXISTS ComparePlayersSeasonAverages;
+CREATE PROCEDURE ComparePlayersSeasonAverages(IN p_PlayerID1 SMALLINT, IN p_PlayerID2 SMALLINT, IN p_StartYear INT)
 BEGIN
     SELECT 
         PlayerID,
-        AVG(FieldGoalsMade) AS AvgFieldGoalsMade,
-        AVG(FieldGoalsAttempted) AS AvgFieldGoalsAttempted,
-        AVG(ThreePointersMade) AS AvgThreePointersMade,
-        AVG(ThreePointersAttempted) AS AvgThreePointersAttempted,
-        AVG(FreeThrowsMade) AS AvgFreeThrowsMade,
-        AVG(FreeThrowsAttempted) AS AvgFreeThrowsAttempted,
-        AVG(PersonalFouls) AS AvgPersonalFouls,
-        AVG(Rebounds) AS AvgRebounds,
-        AVG(OffensiveRebounds) AS AvgOffensiveRebounds,
-        AVG(DefensiveRebounds) AS AvgDefensiveRebounds,
-        AVG(Assists) AS AvgAssists,
-        AVG(Steals) AS AvgSteals,
-        AVG(Blocks) AS AvgBlocks,
-        AVG(Turnovers) AS AvgTurnovers,
-        AVG(Points) AS AvgPoints,
-        AVG(MinutesPlayed) AS AvgMinutesPlayed
+        ROUND(AVG(FieldGoalsMade), 2) AS AvgFieldGoalsMade,
+        ROUND(AVG(FieldGoalsAttempted), 2) AS AvgFieldGoalsAttempted,
+        ROUND(AVG(ThreePointersMade), 2) AS AvgThreePointersMade,
+        ROUND(AVG(ThreePointersAttempted), 2) AS AvgThreePointersAttempted,
+        ROUND(AVG(FreeThrowsMade), 2) AS AvgFreeThrowsMade,
+        ROUND(AVG(FreeThrowsAttempted), 2) AS AvgFreeThrowsAttempted,
+        ROUND(AVG(PersonalFouls), 2) AS AvgPersonalFouls,
+        ROUND(AVG(Rebounds), 2) AS AvgRebounds,
+        ROUND(AVG(OffensiveRebounds), 2) AS AvgOffensiveRebounds,
+        ROUND(AVG(DefensiveRebounds), 2) AS AvgDefensiveRebounds,
+        ROUND(AVG(Assists), 2) AS AvgAssists,
+        ROUND(AVG(Steals), 2) AS AvgSteals,
+        ROUND(AVG(Blocks), 2) AS AvgBlocks,
+        ROUND(AVG(Turnovers), 2) AS AvgTurnovers,
+        ROUND(AVG(Points), 2) AS AvgPoints,
+        ROUND(AVG(MinutesPlayed), 2) AS AvgMinutesPlayed
     FROM PlayerGameStatistic
-    WHERE PlayerID IN (p_PlayerID1, p_PlayerID2)
+    JOIN Game ON PlayerGameStatistic.GameID = Game.GameID
+    WHERE PlayerID IN (p_PlayerID1, p_PlayerID2) AND (
+        (MONTH(Game.Date) >= 9 AND YEAR(Game.Date) = p_StartYear) OR
+        (MONTH(Game.Date) <= 5 AND YEAR(Game.Date) = p_StartYear + 1)
+    )
     GROUP BY PlayerID;
 END;
 
