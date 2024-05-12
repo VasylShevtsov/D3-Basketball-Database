@@ -16,9 +16,8 @@
 DROP PROCEDURE IF EXISTS VerifyPoints;
 CREATE PROCEDURE VerifyPoints(IN p_GameID SMALLINT, IN p_TeamID SMALLINT)
 BEGIN
-    DECLARE PlayerTotalPoints INT;
-    DECLARE TeamTotalPoints INT;
-    DECLARE ErrorMsg VARCHAR(255);
+    DECLARE PlayerPoints INT DEFAULT 0;
+    DECLARE TeamTotalPoints INT DEFAULT 0;
 
     -- Calculate the total points scored by players in the given game
     SELECT SUM(COALESCE(FieldGoalsMade * 2 + ThreePointersMade * 3 + FreeThrowsMade, 0)) INTO PlayerPoints
@@ -26,23 +25,23 @@ BEGIN
     WHERE GameID = p_GameID AND PlayerID IN (SELECT PlayerID FROM Player WHERE TeamID = p_TeamID);
 
     -- Fetch the team's recorded total points from the game's stats
-    SELECT TotalPoints INTO TeamTotalPoints
+    SELECT COALESCE(TotalPoints, 0) INTO TeamTotalPoints
     FROM TeamGameStatistic
     WHERE GameID = p_GameID AND TeamID = p_TeamID;
 
-    -- Compare the points
-    IF PlayerPoints IS NULL THEN
-        SET ErrorMsg = CONCAT('Error: Player points total returns null for TeamID: ', p_TeamID, ' and GameID: ', p_GameID);
-        SELECT ErrorMsg AS Error;
+    -- Check for nulls and mismatch
+    IF PlayerPoints = 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = CONCAT('Error: Player points total returns zero or null for TeamID: ', p_TeamID, ', GameID: ', p_GameID);
     END IF;
 
-    IF TeamTotalPoints IS NULL THEN
-        SET ErrorMsg = CONCAT('Error: TeamTotalPoints returns null for TeamID: ', p_TeamID, ' and GameID: ', p_GameID);
-        SELECT ErrorMsg AS Error;
+    IF TeamTotalPoints = 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = CONCAT('Error: Team total points return zero or null for TeamID: ', p_TeamID, ', GameID: ', p_GameID);
     ELSE
         IF PlayerPoints != TeamTotalPoints THEN
-            SET ErrorMsg = CONCAT('Error: Mismatch in points! Player total: ', PlayerPoints, ' vs Team total: ', TeamTotalPoints);
-            SELECT ErrorMsg AS Error;
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = CONCAT('Error: Mismatch in points! Player total: ', PlayerPoints, ' vs Team total: ', TeamTotalPoints);
         ELSE
             SELECT 'Points are consistent!' AS Message;
         END IF;
