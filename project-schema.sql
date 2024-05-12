@@ -53,6 +53,8 @@ CREATE TABLE PlayerGameStatistic (
   FOREIGN KEY (GameID) REFERENCES Game(GameID) ON DELETE CASCADE ON UPDATE RESTRICT
 );
 
+CREATE INDEX idx_player_game ON PlayerGameStatistic(PlayerID, GameID);
+
 CREATE TABLE TeamGameStatistic (
   TeamID SMALLINT,
   GameID SMALLINT,
