@@ -260,29 +260,65 @@ END;
 
 -- Get Team Season Statistics Procedure
 DROP PROCEDURE IF EXISTS GetTeamSeasonStatistics;
-CREATE PROCEDURE GetTeamSeasonStatistics(IN p_TeamID SMALLINT, IN p_SeasonYear INT)
+CREATE PROCEDURE GetTeamSeasonStatistics(IN p_TeamID SMALLINT, IN p_StartYear INT)
 BEGIN
     SELECT 
-        AVG(FieldGoalsMade) AS AvgFieldGoalsMade,
-        AVG(FieldGoalsAttempted) AS AvgFieldGoalsAttempted,
-        AVG(ThreePointersMade) AS AvgThreePointersMade,
-        AVG(ThreePointersAttempted) AS AvgThreePointersAttempted,
-        AVG(FreeThrowsMade) AS AvgFreeThrowsMade,
-        AVG(FreeThrowsAttempted) AS AvgFreeThrowsAttempted,
-        AVG(PersonalFouls) AS AvgPersonalFouls,
-        AVG(Rebounds) AS AvgRebounds,
-        AVG(OffensiveRebounds) AS AvgOffensiveRebounds,
-        AVG(DefensiveRebounds) AS AvgDefensiveRebounds,
-        AVG(Assists) AS AvgAssists,
-        AVG(Steals) AS AvgSteals,
-        AVG(Blocks) AS AvgBlocks,
-        AVG(Turnovers) AS AvgTurnovers,
-        AVG(TotalPoints) AS AvgTotalPoints
-    FROM TeamGameStatistic
+        ROUND(AVG(FieldGoalsMade), 2) AS AvgFieldGoalsMade,
+        ROUND(AVG(FieldGoalsAttempted), 2) AS AvgFieldGoalsAttempted,
+        ROUND(AVG(ThreePointersMade), 2) AS AvgThreePointersMade,
+        ROUND(AVG(ThreePointersAttempted), 2) AS AvgThreePointersAttempted,
+        ROUND(AVG(FreeThrowsMade), 2) AS AvgFreeThrowsMade,
+        ROUND(AVG(FreeThrowsAttempted), 2) AS AvgFreeThrowsAttempted,
+        ROUND(AVG(PersonalFouls), 2) AS AvgPersonalFouls,
+        ROUND(AVG(Rebounds), 2) AS AvgRebounds,
+        ROUND(AVG(OffensiveRebounds), 2) AS AvgOffensiveRebounds,
+        ROUND(AVG(DefensiveRebounds), 2) AS AvgDefensiveRebounds,
+        ROUND(AVG(Assists), 2) AS AvgAssists,
+        ROUND(AVG(Steals), 2) AS AvgSteals,
+        ROUND(AVG(Blocks), 2) AS AvgBlocks,
+        ROUND(AVG(Turnovers), 2) AS AvgTurnovers,
+        ROUND(AVG(TotalPoints), 2) AS AvgTotalPoints
     JOIN Game ON TeamGameStatistic.GameID = Game.GameID
-    WHERE TeamID = p_TeamID AND YEAR(Game.Date) = p_SeasonYear;
+    WHERE TeamID = p_TeamID AND (
+        (MONTH(Game.Date) >= 9 AND YEAR(Game.Date) = p_StartYear) OR
+        (MONTH(Game.Date) <= 5 AND YEAR(Game.Date) = p_StartYear + 1)
+    );
 END;
 
+-- Get Team Season Statistics Procedure with Date Range
+DROP PROCEDURE IF EXISTS GetTeamSeasonStatisticsBetweenDates;
+CREATE PROCEDURE GetTeamSeasonStatisticsBetweenDates(
+    IN p_TeamID SMALLINT,
+    IN p_StartDate DATE,
+    IN p_EndDate DATE
+)
+BEGIN
+    -- Error handling for invalid date range
+    IF p_StartDate > p_EndDate THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Start date must be before end date.';
+    ELSE
+        SELECT 
+            ROUND(AVG(FieldGoalsMade), 2) AS AvgFieldGoalsMade,
+            ROUND(AVG(FieldGoalsAttempted), 2) AS AvgFieldGoalsAttempted,
+            ROUND(AVG(ThreePointersMade), 2) AS AvgThreePointersMade,
+            ROUND(AVG(ThreePointersAttempted), 2) AS AvgThreePointersAttempted,
+            ROUND(AVG(FreeThrowsMade), 2) AS AvgFreeThrowsMade,
+            ROUND(AVG(FreeThrowsAttempted), 2) AS AvgFreeThrowsAttempted,
+            ROUND(AVG(PersonalFouls), 2) AS AvgPersonalFouls,
+            ROUND(AVG(Rebounds), 2) AS AvgRebounds,
+            ROUND(AVG(OffensiveRebounds), 2) AS AvgOffensiveRebounds,
+            ROUND(AVG(DefensiveRebounds), 2) AS AvgDefensiveRebounds,
+            ROUND(AVG(Assists), 2) AS AvgAssists,
+            ROUND(AVG(Steals), 2) AS AvgSteals,
+            ROUND(AVG(Blocks), 2) AS AvgBlocks,
+            ROUND(AVG(Turnovers), 2) AS AvgTurnovers,
+            ROUND(AVG(TotalPoints), 2) AS AvgTotalPoints
+        FROM TeamGameStatistic
+        JOIN Game ON TeamGameStatistic.GameID = Game.GameID
+        WHERE TeamID = p_TeamID AND Game.Date BETWEEN p_StartDate AND p_EndDate;
+    END IF;
+END;
 
 -- Get Two Player's Season Statistics And Compare Procedure
 DROP PROCEDURE IF EXISTS ComparePlayers;
