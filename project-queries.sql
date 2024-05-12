@@ -614,3 +614,34 @@ BEGIN
     GROUP BY t.TeamID
     ORDER BY Wins DESC, PointDifferential DESC;
 END;
+
+-- Trigger to log player deletions
+DROP TRIGGER IF EXISTS LogDeletePlayer;
+CREATE TRIGGER LogDeletePlayer
+AFTER DELETE ON Player
+FOR EACH ROW
+BEGIN
+    INSERT INTO DeletionLog (EntityType, EntityID, DeletedAt, DeletedBy)
+    VALUES ('Player', OLD.PlayerID, NOW(), CURRENT_USER());
+END;
+
+-- Trigger to log team deletions
+DROP TRIGGER IF EXISTS LogDeleteTeam;
+CREATE TRIGGER LogDeleteTeam
+AFTER DELETE ON Team
+FOR EACH ROW
+BEGIN
+    INSERT INTO DeletionLog (EntityType, EntityID, DeletedAt, DeletedBy)
+    VALUES ('Team', OLD.TeamID, NOW(), CURRENT_USER());
+END;
+
+-- Trigger to log game deletions
+DROP TRIGGER IF EXISTS LogDeleteGame;
+CREATE TRIGGER LogDeleteGame
+AFTER DELETE ON Game
+FOR EACH ROW
+BEGIN
+    INSERT INTO DeletionLog (EntityType, EntityID, DeletedAt, DeletedBy)
+    VALUES ('Game', OLD.GameID, NOW(), CURRENT_USER());
+END;
+
