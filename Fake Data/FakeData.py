@@ -192,7 +192,6 @@ def generate_team_game_statistics(games, player_game_stats):
             'TeamID': game['HomeTeamID'],
             'GameID': game['GameID'],
             'HomeOrAway': 'Home',
-            'Opponent': str(game['AwayTeamID']),
             **home_aggregated_stats
         })
 
@@ -200,7 +199,6 @@ def generate_team_game_statistics(games, player_game_stats):
             'TeamID': game['AwayTeamID'],
             'GameID': game['GameID'],
             'HomeOrAway': 'Away',
-            'Opponent': str(game['HomeTeamID']),
             **away_aggregated_stats
         })
 
@@ -209,16 +207,13 @@ def generate_team_game_statistics(games, player_game_stats):
 # Generate team game statistics
 team_game_stats = generate_team_game_statistics(games, player_game_stats)
 
-# Generate team game statistics
-team_game_stats = generate_team_game_statistics(games, player_game_stats)
-
 # Output to a SQL file
 with open('team_game_stats_data.sql', 'w') as f:
     for stat in team_game_stats:
-        f.write(f"INSERT INTO TeamGameStatistic (TeamID, GameID, HomeOrAway, Opponent, FieldGoalsMade, "
+        f.write(f"INSERT INTO TeamGameStatistic (TeamID, GameID, HomeOrAway, FieldGoalsMade, "
                 f"FieldGoalsAttempted, ThreePointersMade, ThreePointersAttempted, FreeThrowsMade, FreeThrowsAttempted, "
                 f"PersonalFouls, Rebounds, OffensiveRebounds, DefensiveRebounds, Assists, Steals, Blocks, Turnovers, TotalPoints) "
-                f"VALUES ({stat['TeamID']}, {stat['GameID']}, '{stat['HomeOrAway']}', {stat['Opponent']}, {stat['FieldGoalsMade']}, "
+                f"VALUES ({stat['TeamID']}, {stat['GameID']}, '{stat['HomeOrAway']}', {stat['FieldGoalsMade']}, "
                 f"{stat['FieldGoalsAttempted']}, {stat['ThreePointersMade']}, {stat['ThreePointersAttempted']}, {stat['FreeThrowsMade']}, "
                 f"{stat['FreeThrowsAttempted']}, {stat['PersonalFouls']}, {stat['Rebounds']}, {stat['OffensiveRebounds']}, {stat['DefensiveRebounds']}, "
                 f"{stat['Assists']}, {stat['Steals']}, {stat['Blocks']}, {stat['Turnovers']}, {stat['TotalPoints']});\n")
