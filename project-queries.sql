@@ -1,6 +1,9 @@
 -- Title: D3 Basketball Database
 -- Authors: Aidan Von Buchwaldt, Basil Shevtsov, and Jai Deshpande
-
+-- Sources:
+    -- MySQL Error Handling: 
+        -- https://www.mysqltutorial.org/mysql-stored-procedure/mysql-declare-handler/
+        -- https://www.tutorialspoint.com/mysql/mysql_declare_handler_statement.htm
 
 -- Verify Points Procedure
 -- Finds if there is a discrepancy between the total points scored by players on a team and the total points recorded for the team in a game
@@ -65,7 +68,7 @@ BEGIN
         -- Return the error message
         SELECT @full_error AS Error_Message;
     END;
-    
+
     INSERT INTO Player (FirstName, LastName, TeamID, Position, HeightInches, Weight, HighSchool)
     VALUES (p_FirstName, p_LastName, p_TeamID, p_Position, p_HeightInches, p_Weight, p_HighSchool);
 END;
