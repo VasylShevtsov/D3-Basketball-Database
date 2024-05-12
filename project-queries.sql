@@ -10,6 +10,8 @@
     -- Player Impact Estimate (PIE): https://www.nbastuffer.com/analytics101/player-impact-estimate-pie/
     -- NBA terminology glossary: https://www.nba.com/stats/help/glossary
 
+DELIMITER $$
+
 -- Insert Player Procedure
 DROP PROCEDURE IF EXISTS NewPlayer;
 
@@ -43,7 +45,7 @@ VALUES
         p_HighSchool
     );
 
-END;
+END $$ 
 
 -- Delete Player Procedure
 DROP PROCEDURE IF EXISTS DeletePlayer;
@@ -54,7 +56,7 @@ DELETE FROM
 WHERE
     PlayerID = p_PlayerID;
 
-END;
+END $$ 
 
 -- Update Player Procedure
 DROP PROCEDURE IF EXISTS UpdatePlayer;
@@ -98,7 +100,7 @@ SELECT
 
 END IF;
 
-END;
+END $$ 
 
 -- Get Player Stats From Specific Game Procedure
 DROP PROCEDURE IF EXISTS GetPlayerStats;
@@ -115,7 +117,7 @@ WHERE
     PlayerID = p_PlayerID
     AND GameID = p_GameID;
 
-END;
+END $$ 
 
 -- Get Team Stats From Specific Game Procedure
 DROP PROCEDURE IF EXISTS GetTeamStats;
@@ -132,7 +134,7 @@ WHERE
     TeamID = p_TeamID
     AND GameID = p_GameID;
 
-END;
+END $$ 
 
 -- Get Both Teams Stats From Specific Game Procedure
 DROP PROCEDURE IF EXISTS GetBothTeamStats;
@@ -147,7 +149,7 @@ FROM
 WHERE
     tg.GameID = p_GameID;
 
-END;
+END $$ 
 
 -- Get Player's Season Averages Procedure for Academic Year (using the start year)
 DROP PROCEDURE IF EXISTS GetPlayerSeasonAverages;
@@ -189,7 +191,7 @@ WHERE
         )
     );
 
-END;
+END $$ 
 
 -- Get Player's Averages Between Specific Dates Procedure
 DROP PROCEDURE IF EXISTS GetPlayerAveragesBetweenDates;
@@ -229,7 +231,7 @@ WHERE
     AND Game.Date BETWEEN p_StartDate
     AND p_EndDate;
 
-END;
+END $$ 
 
 -- Get All Games Played By a Team Procedure
 DROP PROCEDURE IF EXISTS GetTeamGameHistory;
@@ -255,7 +257,7 @@ WHERE
 ORDER BY
     g.Date;
 
-END;
+END $$ 
 
 -- Get Team Season Statistics Procedure
 DROP PROCEDURE IF EXISTS GetTeamSeasonStatistics;
@@ -291,7 +293,7 @@ WHERE
         )
     );
 
-END;
+END $$ 
 
 -- Get Team Season Statistics Procedure with Date Range
 DROP PROCEDURE IF EXISTS GetTeamSeasonStatisticsBetweenDates;
@@ -332,7 +334,7 @@ WHERE
 
 END IF;
 
-END;
+END $$ 
 
 -- Get Two Player's Season Averages for Academic Year (using the start year)
 DROP PROCEDURE IF EXISTS ComparePlayersSeasonAverages;
@@ -378,7 +380,7 @@ WHERE
 GROUP BY
     PlayerID;
 
-END;
+END $$ 
 
 -- Finds the MVP of the Season for the Academic Year (using start year)
 DROP PROCEDURE IF EXISTS MVPofTheSeason;
@@ -414,7 +416,7 @@ ORDER BY
 LIMIT
     5;
 
-END;
+END $$ 
 
 -- Find the efficiency rating of a player for an academic year
 -- Formula: (PTS + REB + AST + STL + BLK − Missed FG − Missed FT - TO) / GP
@@ -445,7 +447,7 @@ WHERE
 GROUP BY
     CONCAT(p_StartYear, '-', p_StartYear + 1);
 
-END;
+END $$ 
 
 -- Calculate Player Impact Estimate (PIE) for a given game
 -- Formula: (PTS + FGM + FTM - FGA - FTA + DREB + (.5 * OREB) + AST + STL + (.5 * BLK) - PF - TO) / 
@@ -568,7 +570,7 @@ FROM
 
 DROP TABLE TempPIE;
 
-END;
+END $$ 
 
 -- Custom formula to find the impact of a player on their team's performance in a given season
 -- The impact is measured by the player's scoring performance in games where the team won
@@ -698,7 +700,7 @@ ORDER BY
 LIMIT
     p_Limit;
 
-END;
+END $$ 
 
 -- Retrieve a log of all games played by a specific player
 DROP PROCEDURE IF EXISTS GetPlayerGameLog;
@@ -737,7 +739,7 @@ WHERE
 ORDER BY
     g.Date DESC;
 
-END;
+END $$ 
 
 -- Ranks teams for a given season based on their win-loss record and point differential
 DROP PROCEDURE IF EXISTS SeasonalTeamRankingsProcedure;
@@ -797,7 +799,7 @@ ORDER BY
     Wins DESC,
     PointDifferential DESC;
 
-END;
+END $$ 
 
 -- Verify Points Procedure
 -- Finds if there is a discrepancy between the total points scored by players on a team and the total points recorded for the team in a game
@@ -875,7 +877,7 @@ END IF;
 
 END IF;
 
-END;
+END $$ 
 
 -- Verify All Stats Procedure
 -- Finds discrepancies between all major statistical totals recorded for players and those recorded for their teams in a game
@@ -1060,7 +1062,7 @@ SELECT
 
 END IF;
 
-END;
+END $$ 
 
 -- Trigger to log player deletions
 DROP TRIGGER IF EXISTS LogDeletePlayer;
@@ -1073,7 +1075,7 @@ INSERT INTO
 VALUES
     ('Player', OLD.PlayerID, NOW(), CURRENT_USER());
 
-END;
+END $$ 
 
 -- Trigger to log team deletions
 DROP TRIGGER IF EXISTS LogDeleteTeam;
@@ -1086,7 +1088,7 @@ INSERT INTO
 VALUES
     ('Team', OLD.TeamID, NOW(), CURRENT_USER());
 
-END;
+END $$ 
 
 -- Trigger to log game deletions
 DROP TRIGGER IF EXISTS LogDeleteGame;
@@ -1099,7 +1101,7 @@ INSERT INTO
 VALUES
     ('Game', OLD.GameID, NOW(), CURRENT_USER());
 
-END;
+END $$ 
 
 -- Trigger to check for any stat discrepancy upon insert of a team game statistic entry
 DROP TRIGGER IF EXISTS trg_VerifyStatsAfterInsert;
@@ -1109,4 +1111,6 @@ AFTER
 INSERT
     ON TeamGameStatistic FOR EACH ROW BEGIN CALL VerifyAllStats(NEW.GameID, NEW.TeamID);
 
-END;
+END $$ 
+
+DELIMETER ;
