@@ -352,9 +352,9 @@ BEGIN
 END;
 
 
--- Find MVP of the Season Procedure
-DROP PROCEDURE IF EXISTS MVPofTheSeason;   
-CREATE PROCEDURE MVPofTheSeason(IN p_SeasonYear INT)
+-- Finds the MVP of the Season for the Academic Year (using start year)
+DROP PROCEDURE IF EXISTS MVPofTheSeason;
+CREATE PROCEDURE MVPofTheSeason(IN p_SeasonStartYear INT)
 BEGIN
     SELECT 
         PlayerID,
@@ -365,9 +365,11 @@ BEGIN
         SUM(Blocks) AS TotalBlocks
     FROM PlayerGameStatistic
     JOIN Game ON PlayerGameStatistic.GameID = Game.GameID
-    WHERE YEAR(Game.Date) = p_SeasonYear
+    WHERE 
+        (MONTH(Game.Date) >= 9 AND YEAR(Game.Date) = p_SeasonStartYear) OR 
+        (MONTH(Game.Date) <= 5 AND YEAR(Game.Date) = p_SeasonStartYear + 1)
     GROUP BY PlayerID
-    ORDER BY SUM(Points) DESC
+    ORDER BY TotalPoints DESC, TotalAssists DESC, TotalRebounds DESC, TotalSteals DESC, TotalBlocks DESC
     LIMIT 5;
 END;
 
