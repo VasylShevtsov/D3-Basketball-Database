@@ -163,31 +163,75 @@ BEGIN
 END;
 
 
--- Get Player's Season Averages Procedure
+-- Get Player's Season Averages Procedure for Academic Year (using the start year)
 DROP PROCEDURE IF EXISTS GetPlayerSeasonAverages;
 CREATE PROCEDURE GetPlayerSeasonAverages(
+    IN p_StartYear INT,
     IN p_PlayerID SMALLINT
 )
 BEGIN
     SELECT 
-        AVG(FieldGoalsMade) AS AvgFieldGoalsMade,
-        AVG(FieldGoalsAttempted) AS AvgFieldGoalsAttempted,
-        AVG(ThreePointersMade) AS AvgThreePointersMade,
-        AVG(ThreePointersAttempted) AS AvgThreePointersAttempted,
-        AVG(FreeThrowsMade) AS AvgFreeThrowsMade,
-        AVG(FreeThrowsAttempted) AS AvgFreeThrowsAttempted,
-        AVG(PersonalFouls) AS AvgPersonalFouls,
-        AVG(Rebounds) AS AvgRebounds,
-        AVG(OffensiveRebounds) AS AvgOffensiveRebounds,
-        AVG(DefensiveRebounds) AS AvgDefensiveRebounds,
-        AVG(Assists) AS AvgAssists,
-        AVG(Steals) AS AvgSteals,
-        AVG(Blocks) AS AvgBlocks,
-        AVG(Turnovers) AS AvgTurnovers,
-        AVG(Points) AS AvgPoints,
-        AVG(MinutesPlayed) AS AvgMinutesPlayed
+        ROUND(AVG(FieldGoalsMade), 2) AS AvgFieldGoalsMade,
+        ROUND(AVG(FieldGoalsAttempted), 2) AS AvgFieldGoalsAttempted,
+        ROUND(AVG(ThreePointersMade), 2) AS AvgThreePointersMade,
+        ROUND(AVG(ThreePointersAttempted), 2) AS AvgThreePointersAttempted,
+        ROUND(AVG(FreeThrowsMade), 2) AS AvgFreeThrowsMade,
+        ROUND(AVG(FreeThrowsAttempted), 2) AS AvgFreeThrowsAttempted,
+        ROUND(AVG(PersonalFouls), 2) AS AvgPersonalFouls,
+        ROUND(AVG(Rebounds), 2) AS AvgRebounds,
+        ROUND(AVG(OffensiveRebounds), 2) AS AvgOffensiveRebounds,
+        ROUND(AVG(DefensiveRebounds), 2) AS AvgDefensiveRebounds,
+        ROUND(AVG(Assists), 2) AS AvgAssists,
+        ROUND(AVG(Steals), 2) AS AvgSteals,
+        ROUND(AVG(Blocks), 2) AS AvgBlocks,
+        ROUND(AVG(Turnovers), 2) AS AvgTurnovers,
+        ROUND(AVG(Points), 2) AS AvgPoints,
+        ROUND(AVG(MinutesPlayed), 2) AS AvgMinutesPlayed
     FROM PlayerGameStatistic
-    WHERE PlayerID = p_PlayerID;
+    JOIN Game ON PlayerGameStatistic.GameID = Game.GameID
+    WHERE PlayerID = p_PlayerID 
+        AND (
+            (MONTH(Game.Date) >= 9 AND YEAR(Game.Date) = p_StartYear) 
+            OR 
+            (MONTH(Game.Date) <= 5 AND YEAR(Game.Date) = p_StartYear + 1)
+        );
+END;
+
+
+-- Get Player's Averages Between Specific Dates Procedure
+DROP PROCEDURE IF EXISTS GetPlayerAveragesBetweenDates;
+CREATE PROCEDURE GetPlayerAveragesBetweenDates(
+    IN p_PlayerID SMALLINT,
+    IN p_StartDate DATE,
+    IN p_EndDate DATE
+)
+BEGIN
+    IF p_StartDate > p_EndDate THEN
+        SIGNAL SQLSTATE '45000' -- custom error handling in case dates are invalid
+        SET MESSAGE_TEXT = 'Start date must be before end date.';
+    ELSE
+    SELECT 
+        p_PlayerID AS PlayerID,
+        ROUND(AVG(FieldGoalsMade), 2) AS AvgFieldGoalsMade,
+        ROUND(AVG(FieldGoalsAttempted), 2) AS AvgFieldGoalsAttempted,
+        ROUND(AVG(ThreePointersMade), 2) AS AvgThreePointersMade,
+        ROUND(AVG(ThreePointersAttempted), 2) AS AvgThreePointersAttempted,
+        ROUND(AVG(FreeThrowsMade), 2) AS AvgFreeThrowsMade,
+        ROUND(AVG(FreeThrowsAttempted), 2) AS AvgFreeThrowsAttempted,
+        ROUND(AVG(PersonalFouls), 2) AS AvgPersonalFouls,
+        ROUND(AVG(Rebounds), 2) AS AvgRebounds,
+        ROUND(AVG(OffensiveRebounds), 2) AS AvgOffensiveRebounds,
+        ROUND(AVG(DefensiveRebounds), 2) AS AvgDefensiveRebounds,
+        ROUND(AVG(Assists), 2) AS AvgAssists,
+        ROUND(AVG(Steals), 2) AS AvgSteals,
+        ROUND(AVG(Blocks), 2) AS AvgBlocks,
+        ROUND(AVG(Turnovers), 2) AS AvgTurnovers,
+        ROUND(AVG(Points), 2) AS AvgPoints,
+        ROUND(AVG(MinutesPlayed), 2) AS AvgMinutesPlayed
+    FROM PlayerGameStatistic
+    JOIN Game ON PlayerGameStatistic.GameID = Game.GameID
+    WHERE PlayerID = p_PlayerID 
+        AND Game.Date BETWEEN p_StartDate AND p_EndDate;
 END;
 
 
