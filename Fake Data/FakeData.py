@@ -55,40 +55,38 @@ with open('player_data.sql', 'w') as f:
                 f"'{player['Position']}', {player['HeightInches']}, {player['Weight']}, '{player['HighSchool']}');\n")
 
 # function to generatie game pairings
-def generate_unique_game_pairings(team_ids, number_of_games_per_year, years=4):
+def generate_unique_game_pairings(team_ids, games_per_team_per_year, years):
     games_data = []
-    current_year = datetime.now().year
-
-    for year in range(current_year - years, current_year + 1):
-        for _ in range(number_of_games_per_year):
-            home_team = random.choice(team_ids)
-            away_team = home_team
-            while away_team == home_team:
-                away_team = random.choice(team_ids)
-
-            # Generate month within the academic year (August to May)
-            month = random.choice([8, 9, 10, 11, 12, 1, 2, 3, 4, 5])
-            if month > 7:  # For months August to December, the year is current
-                game_year = year
-            else:  # For months January to May, the year should increment
-                game_year = year + 1
-
-            day = random.randint(1, 28)
-            game_date = datetime(game_year, month, day)
-
-            game_id = len(games_data) + 1
-            game_data = {
-                'GameID': game_id,
-                'HomeTeamID': home_team,
-                'AwayTeamID': away_team,
-                'GameDate': game_date.strftime('%Y-%m-%d'),
-            }
-            
-            games_data.append(game_data)
+    academic_months = [8, 9, 10, 11, 12, 1, 2, 3, 4, 5]  # August to May
     
+    current_year = datetime.now().year
+    start_year = current_year - years
+
+    for year in range(start_year, current_year + 1):
+        for team in team_ids:
+            for game_number in range(games_per_team_per_year):
+                opponent = random.choice([t for t in team_ids if t != team])
+                month = random.choice(academic_months)
+                
+                if month > 7:
+                    game_year = year
+                else:
+                    game_year = year + 1
+
+                day = random.randint(1, 28)
+                game_date = datetime(game_year, month, day)
+                
+                game_data = {
+                    'GameID': f'{year}-{team}-{game_number + 1}',
+                    'HomeTeamID': team,
+                    'AwayTeamID': opponent,
+                    'GameDate': game_date.strftime('%Y-%m-%d'),
+                }
+                
+                games_data.append(game_data)
     return games_data
 
-games = generate_unique_game_pairings(team_ids=team_ids, number_of_games_per_year=6, years=4)
+games = generate_unique_game_pairings(team_ids, 6, 4)
 with open('games_data.sql', 'w') as f:
     for game in games:
         f.write(f"INSERT INTO Game (GameID, HomeTeamID, AwayTeamID, Date) VALUES ({game['GameID']}, {game['HomeTeamID']}, {game['AwayTeamID']}, '{game['GameDate']}');\n")
