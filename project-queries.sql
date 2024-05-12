@@ -614,8 +614,8 @@ END;
 
 -- Verify All Stats Procedure
 -- Finds discrepancies between all major statistical totals recorded for players and those recorded for their teams in a game
-DROP PROCEDURE IF EXISTS VerifyAllStatsDetailed;
-CREATE PROCEDURE VerifyAllStatsDetailed(IN p_GameID SMALLINT, IN p_TeamID SMALLINT)
+DROP PROCEDURE IF EXISTS VerifyAllStats;
+CREATE PROCEDURE VerifyAllStats(IN p_GameID SMALLINT, IN p_TeamID SMALLINT)
 BEGIN
     DECLARE PlayerFGMade, PlayerFGAttempted, Player3PMade, Player3PAttempted, PlayerFTMade, PlayerFTAttempted,
             PlayerFouls, PlayerRebounds, PlayerOffRebounds, PlayerDefRebounds, PlayerAssists, PlayerSteals,
@@ -740,3 +740,11 @@ BEGIN
     VALUES ('Game', OLD.GameID, NOW(), CURRENT_USER());
 END;
 
+-- Trigger to check for any stat discrepancy upon insert of a team game statistic entry
+DROP TRIGGER IF EXISTS trg_VerifyStatsAfterInsert;
+CREATE TRIGGER trg_VerifyStatsAfterInsert
+AFTER INSERT ON TeamGameStatistic
+FOR EACH ROW
+BEGIN
+    CALL VerifyAllStats(NEW.GameID, NEW.TeamID);
+END;
