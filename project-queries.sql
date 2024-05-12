@@ -7,6 +7,8 @@
     -- MySQL SIGNAL statement:
         -- https://www.tutorialspoint.com/How-can-we-use-SIGNAL-statement-with-MySQL-triggers
     -- Basketball efficiency rating: https://en.wikipedia.org/wiki/Efficiency_(basketball)
+    -- Player Impact Estimate (PIE): https://www.nbastuffer.com/analytics101/player-impact-estimate-pie/
+    -- NBA terminology glossary: https://www.nba.com/stats/help/glossary
 
 
 -- Verify Points Procedure
@@ -397,23 +399,136 @@ BEGIN
     GROUP BY CONCAT(p_StartYear, '-', p_StartYear + 1);
 END;
 
-
-
-
--- Finds the impact of a player on their team's performance
-DROP PROCEDURE IF EXISTS AnalyzeTeamImpact;
-CREATE PROCEDURE AnalyzeTeamImpact(IN p_PlayerID SMALLINT, IN p_SeasonYear INT)
+-- Calculate Player Impact Estimate (PIE) for a given game
+-- Formula: (PTS + FGM + FTM - FGA - FTA + DREB + (.5 * OREB) + AST + STL + (.5 * BLK) - PF - TO) / 
+-- (GmPTS + GmFGM + GmFTM - GmFGA - GmFTA + GmDREB + (.5 * GmOREB) + GmAST + GmSTL + (.5 * GmBLK) - GmPF - GmTO)
+-- See NBAstuffer for PIE description: https://www.nbastuffer.com/analytics101/player-impact-estimate-pie/
+-- To clarify the abbreviations, paste into ChatGPT and ask for the full terms, it's too long to include here
+DROP PROCEDURE IF EXISTS CalculatePlayerPIE;
+CREATE PROCEDURE CalculatePlayerPIE(IN player_id SMALLINT, IN game_id SMALLINT)
 BEGIN
+    DECLARE total_game_stats DOUBLE;
+    DECLARE player_stats DOUBLE;
+
+    -- Calculate player's statistics
     SELECT 
-        GameID,
-        IF(PlayerID = p_PlayerID, 'Played', 'Not Played') AS PlayerParticipation,
-        SUM(TotalPoints) OVER (PARTITION BY GameID) AS TeamPointsWithPlayer,
-        AVG(TotalPoints) OVER (PARTITION BY PlayerParticipation) AS AvgTeamPoints
+        (Points + FieldGoalsMade + FreeThrowsMade - FieldGoalsAttempted - FreeThrowsAttempted +
+        DefensiveRebounds + (OffensiveRebounds/2) + Assists + Steals + (Blocks/2) - 
+        PersonalFouls - Turnovers) INTO player_stats
+    FROM PlayerGameStatistic
+    WHERE PlayerID = player_id AND GameID = game_id;
+    
+    -- Calculate total game statistics (summing stats from both teams)
+    SELECT 
+        (SUM(TotalPoints) + SUM(FieldGoalsMade) + SUM(FreeThrowsMade) - SUM(FieldGoalsAttempted) - SUM(FreeThrowsAttempted) +
+        SUM(DefensiveRebounds) + (SUM(OffensiveRebounds)/2) + SUM(Assists) + SUM(Steals) + 
+        (SUM(Blocks)/2) - SUM(PersonalFouls) - SUM(Turnovers)) INTO total_game_stats
     FROM TeamGameStatistic
-    JOIN Game ON TeamGameStatistic.GameID = Game.GameID
-    LEFT JOIN PlayerGameStatistic ON TeamGameStatistic.GameID = PlayerGameStatistic.GameID AND PlayerGameStatistic.PlayerID = p_PlayerID
-    WHERE YEAR(Game.Date) = p_SeasonYear;
+    WHERE GameID = game_id;
+
+    IF total_game_stats = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Game statistics cannot be zero.';
+    ELSE
+        SELECT player_stats / total_game_stats AS PlayerImpactEstimate;
+END IF;
+END
+
+
+
+-- Calculate Player Impact Estimate (PIE) for a given season
+DROP PROCEDURE IF EXISTS GetPlayerAveragePIEBySeason;
+CREATE PROCEDURE GetPlayerAveragePIEBySeason(
+    IN p_StartYear INT,
+    IN p_PlayerID SMALLINT
+)
+BEGIN
+    DECLARE game_id SMALLINT;
+    DECLARE pie DOUBLE DEFAULT 0;
+    DECLARE total_pie DOUBLE DEFAULT 0;
+    DECLARE games_count INT DEFAULT 0;
+    DECLARE cur CURSOR FOR
+        SELECT GameID FROM Game
+        WHERE (
+            (MONTH(Date) >= 9 AND YEAR(Date) = p_StartYear) OR
+            (MONTH(Date) <= 5 AND YEAR(Date) = p_StartYear + 1)
+        ) AND (
+            Game.HomeTeamID IN (SELECT TeamID FROM Player WHERE PlayerID = p_PlayerID) OR
+            Game.AwayTeamID IN (SELECT TeamID FROM Player WHERE PlayerID = p_PlayerID)
+        );
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET game_id = NULL;
+
+    OPEN cur;
+
+    game_loop: LOOP
+        FETCH cur INTO game_id;
+        IF game_id IS NULL THEN
+            LEAVE game_loop;
+        END IF;
+        CALL GetPlayerImpactEstimate(p_PlayerID, game_id);
+        FETCH cur INTO game_id; -- Assuming GetPlayerImpactEstimate sets a user variable @PIE
+        SET total_pie = total_pie + @PIE;
+        SET games_count = games_count + 1;
+    END LOOP;
+
+    CLOSE cur;
+
+    IF games_count > 0 THEN
+        SELECT ROUND(total_pie / games_count, 2) AS AveragePIE;
+    ELSE
+        SELECT NULL AS AveragePIE; -- In case no games were found or other edge cases
+    END IF;
 END;
+
+
+
+-- Custom formula to find the impact of a player on their team's performance in a given season
+-- The impact is measured by the player's scoring performance in games where the team won
+-- We are looking at how often the team wins when a player scores above their average.
+-- Returns the winning percentage when the player scores above their average for the season
+DROP PROCEDURE IF EXISTS GetPlayerSuccessImpact;
+CREATE PROCEDURE GetPlayerSuccessImpact(
+    IN p_PlayerID SMALLINT,
+    IN p_StartYear INT
+)
+BEGIN
+    DECLARE avg_points DECIMAL(5,2);
+    DECLARE games_played INT;
+    DECLARE games_won INT;
+
+    -- Calculate average points scored by the player for the given season and the number of games played
+    SELECT 
+        AVG(Points) INTO avg_points,
+        COUNT(*) INTO games_played
+    FROM PlayerGameStatistic
+    JOIN Game ON PlayerGameStatistic.GameID = Game.GameID
+    WHERE PlayerID = p_PlayerID
+        AND (
+            (MONTH(Game.Date) >= 9 AND YEAR(Game.Date) = p_StartYear) 
+            OR 
+            (MONTH(Game.Date) <= 5 AND YEAR(Game.Date) = p_StartYear + 1)
+        );
+
+    -- Count games where the player scored above their average and the team won during the season
+    SELECT COUNT(*) INTO games_won
+    FROM PlayerGameStatistic AS pgs
+    JOIN Game AS g ON pgs.GameID = g.GameID
+    JOIN TeamGameStatistic AS tgs ON g.GameID = tgs.GameID
+    WHERE pgs.PlayerID = p_PlayerID AND pgs.Points > avg_points
+            -- check if the player's team won the game
+          AND (
+              (tgs.TeamID = g.HomeTeamID AND g.HomeTeamID = (SELECT TeamID FROM Player WHERE PlayerID = p_PlayerID) AND tgs.TotalPoints > (SELECT TotalPoints FROM TeamGameStatistic WHERE GameID = g.GameID AND TeamID = g.AwayTeamID))
+              OR
+              (tgs.TeamID = g.AwayTeamID AND g.AwayTeamID = (SELECT TeamID FROM Player WHERE PlayerID = p_PlayerID) AND tgs.TotalPoints > (SELECT TotalPoints FROM TeamGameStatistic WHERE GameID = g.GameID AND TeamID = g.HomeTeamID))
+          )
+        AND (
+            (MONTH(g.Date) >= 9 AND YEAR(g.Date) = p_StartYear) 
+            OR 
+            (MONTH(g.Date) <= 5 AND YEAR(g.Date) = p_StartYear + 1)
+        );
+
+    -- Calculate the winning percentage when the player scores above their average for the season
+    SELECT IF(games_played = 0, NULL, (games_won / games_played) * 100) AS WinningImpactPercentage;
+END
 
 
 -- Finds the optimal roster for a given game
