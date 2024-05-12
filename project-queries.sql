@@ -150,29 +150,18 @@ CREATE PROCEDURE GetBothTeamStats(
     IN p_GameID SMALLINT
 )
 BEGIN
-    SELECT 
-        tg.TeamID,
-        tg.HomeOrAway,
-        tg.Opponent,
-        tg.FieldGoalsMade,
-        tg.FieldGoalsAttempted,
-        tg.ThreePointersMade,
-        tg.ThreePointersAttempted,
-        tg.FreeThrowsMade,
-        tg.FreeThrowsAttempted,
-        tg.PersonalFouls,
-        tg.Rebounds,
-        tg.OffensiveRebounds,
-        tg.DefensiveRebounds,
-        tg.Assists,
-        tg.Steals,
-        tg.Blocks,
-        tg.Turnovers,
-        tg.TotalPoints,
-        t.TeamName
+    DECLARE rowCount INT DEFAULT 0;
+
+    SELECT t.TeamName, tg.*
     FROM TeamGameStatistic tg
     JOIN Team t ON tg.TeamID = t.TeamID
     WHERE tg.GameID = p_GameID;
+
+    SELECT FOUND_ROWS() INTO rowCount;
+
+    IF rowCount = 0 THEN
+        SELECT CONCAT('No statistics found for game with GameID ', p_GameID, '.') AS Message;
+    END IF;
 END;
 
 
