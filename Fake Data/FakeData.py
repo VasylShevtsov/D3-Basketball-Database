@@ -1,6 +1,13 @@
 from faker import Faker
 from datetime import datetime, timedelta
 import random
+import os
+
+# This is so the generated files are saved in the same directory as this script, not in the project root
+# Get the directory of the current script
+script_dir = os.path.dirname(os.path.realpath(__file__))
+# Change the working directory to the script's directory
+os.chdir(script_dir)
 
 fake = Faker()
 
