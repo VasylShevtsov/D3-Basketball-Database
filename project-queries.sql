@@ -436,49 +436,56 @@ END
 
 
 -- Calculate Player Impact Estimate (PIE) for a given season
-DROP PROCEDURE IF EXISTS GetPlayerAveragePIEBySeason;
-CREATE PROCEDURE GetPlayerAveragePIEBySeason(
-    IN p_StartYear INT,
-    IN p_PlayerID SMALLINT
+DROP PROCEDURE IF EXISTS CalculateSeasonPlayerPIE;
+CREATE PROCEDURE CalculateSeasonPlayerPIE(
+    IN p_PlayerID SMALLINT,
+    IN p_StartYear INT
 )
 BEGIN
-    DECLARE game_id SMALLINT;
-    DECLARE pie DOUBLE DEFAULT 0;
-    DECLARE total_pie DOUBLE DEFAULT 0;
-    DECLARE games_count INT DEFAULT 0;
+    -- Temporary table to store individual game PIE values
+    CREATE TEMPORARY TABLE IF NOT EXISTS TempPIE (GamePIE DOUBLE);
+
+    -- Find all relevant games within the academic year
     DECLARE cur CURSOR FOR
-        SELECT GameID FROM Game
-        WHERE (
-            (MONTH(Date) >= 9 AND YEAR(Date) = p_StartYear) OR
-            (MONTH(Date) <= 5 AND YEAR(Date) = p_StartYear + 1)
-        ) AND (
-            Game.HomeTeamID IN (SELECT TeamID FROM Player WHERE PlayerID = p_PlayerID) OR
-            Game.AwayTeamID IN (SELECT TeamID FROM Player WHERE PlayerID = p_PlayerID)
-        );
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET game_id = NULL;
+        SELECT GameID 
+        FROM Game
+        WHERE (MONTH(Date) >= 9 AND YEAR(Date) = p_StartYear) OR (MONTH(Date) <= 5 AND YEAR(Date) = p_StartYear + 1);
+    
+    DECLARE v_GameID SMALLINT;
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
 
     OPEN cur;
-
     game_loop: LOOP
-        FETCH cur INTO game_id;
-        IF game_id IS NULL THEN
+        FETCH cur INTO v_GameID;
+        IF done THEN
             LEAVE game_loop;
         END IF;
-        CALL GetPlayerImpactEstimate(p_PlayerID, game_id);
-        FETCH cur INTO game_id; -- Assuming GetPlayerImpactEstimate sets a user variable @PIE
-        SET total_pie = total_pie + @PIE;
-        SET games_count = games_count + 1;
-    END LOOP;
 
+        -- Calculate PIE for each game and store in the temporary table
+        INSERT INTO TempPIE (GamePIE)
+        SELECT player_stats / total_game_stats AS PlayerImpactEstimate
+        FROM (
+            SELECT 
+                (Points + FieldGoalsMade + FreeThrowsMade - FieldGoalsAttempted - FreeThrowsAttempted +
+                DefensiveRebounds + (OffensiveRebounds/2) + Assists + Steals + (Blocks/2) - 
+                PersonalFouls - Turnovers) AS player_stats,
+                (SUM(TotalPoints) + SUM(FieldGoalsMade) + SUM(FreeThrowsMade) - SUM(FieldGoalsAttempted) - SUM(FreeThrowsAttempted) +
+                SUM(DefensiveRebounds) + (SUM(OffensiveRebounds)/2) + SUM(Assists) + SUM(Steals) + 
+                (SUM(Blocks)/2) - SUM(PersonalFouls) - SUM(Turnovers)) AS total_game_stats
+            FROM PlayerGameStatistic
+            JOIN TeamGameStatistic USING (GameID)
+            WHERE PlayerID = p_PlayerID AND GameID = v_GameID
+            GROUP BY GameID
+        ) AS GameStats
+        WHERE total_game_stats != 0;
+
+    END LOOP;
     CLOSE cur;
 
-    IF games_count > 0 THEN
-        SELECT ROUND(total_pie / games_count, 2) AS AveragePIE;
-    ELSE
-        SELECT NULL AS AveragePIE; -- In case no games were found or other edge cases
-    END IF;
+    SELECT AVG(GamePIE) AS SeasonPlayerImpactEstimate FROM TempPIE;
+    DROP TABLE TempPIE;
 END;
-
 
 
 -- Custom formula to find the impact of a player on their team's performance in a given season
