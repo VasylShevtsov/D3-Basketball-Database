@@ -244,16 +244,19 @@ BEGIN
     SELECT 
         g.GameID,
         g.Date,
-        t.TeamName AS Opponent,
+        CASE -- conditional to determine the opponent based on whether the team was home or away
+            WHEN tg.HomeOrAway = 'Home' THEN at.TeamName
+            ELSE ht.TeamName
+        END AS Opponent,
         tg.HomeOrAway,
         tg.TotalPoints
     FROM TeamGameStatistic tg
     JOIN Game g ON tg.GameID = g.GameID
-    JOIN Team t ON t.TeamID = CASE WHEN tg.HomeOrAway = 'Away' THEN tg.TeamID ELSE tg.Opponent END
+    JOIN Team ht ON g.HomeTeamID = ht.TeamID -- Home team
+    JOIN Team at ON g.AwayTeamID = at.TeamID -- Away team
     WHERE tg.TeamID = p_TeamID
     ORDER BY g.Date;
 END;
-
 
 -- Get Team Season Statistics Procedure
 DROP PROCEDURE IF EXISTS GetTeamSeasonStatistics;
