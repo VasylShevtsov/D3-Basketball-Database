@@ -53,6 +53,8 @@ CREATE TABLE PlayerGameStatistic (
   FOREIGN KEY (GameID) REFERENCES Game(GameID) ON DELETE CASCADE ON UPDATE RESTRICT
 );
 
+CREATE INDEX idx_player_game ON PlayerGameStatistic(PlayerID, GameID);
+
 CREATE TABLE TeamGameStatistic (
   TeamID SMALLINT,
   GameID SMALLINT,
@@ -77,3 +79,10 @@ CREATE TABLE TeamGameStatistic (
   FOREIGN KEY (GameID) REFERENCES Game(GameID) ON DELETE CASCADE ON UPDATE RESTRICT
 );
 
+CREATE TABLE DeletionLog (
+  LogID INT AUTO_INCREMENT PRIMARY KEY,
+  EntityType VARCHAR(50),
+  EntityID INT,
+  DeletedAt DATETIME,
+  DeletedBy VARCHAR(50)
+);
