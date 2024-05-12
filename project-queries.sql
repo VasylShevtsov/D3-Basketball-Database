@@ -555,3 +555,62 @@ BEGIN
     ORDER BY ps.Points DESC
     LIMIT p_Limit;
 END;
+
+-- Retrieve a log of all games played by a specific player
+DROP PROCEDURE IF EXISTS GetPlayerGameLog;
+CREATE PROCEDURE PlayerGameLogProcedure(IN p_PlayerID SMALLINT)
+BEGIN
+    SELECT 
+        p.FirstName,
+        p.LastName,
+        p.Position,
+        g.Date AS GameDate,
+        IF(t.TeamID = g.HomeTeamID, 'Home', 'Away') AS HomeOrAway,
+        t.TeamName AS TeamPlayedFor,
+        pg.FieldGoalsMade,
+        pg.FieldGoalsAttempted,
+        pg.ThreePointersMade,
+        pg.ThreePointersAttempted,
+        pg.FreeThrowsMade,
+        pg.FreeThrowsAttempted,
+        pg.PersonalFouls,
+        pg.Rebounds,
+        pg.OffensiveRebounds,
+        pg.DefensiveRebounds,
+        pg.Assists,
+        pg.Steals,
+        pg.Blocks,
+        pg.Turnovers,
+        pg.Points AS TotalPoints,
+        pg.MinutesPlayed
+    FROM PlayerGameStatistic pg
+    JOIN Player p ON pg.PlayerID = p.PlayerID
+    JOIN Game g ON pg.GameID = g.GameID
+    JOIN Team t ON p.TeamID = t.TeamID
+    WHERE pg.PlayerID = p_PlayerID
+    ORDER BY g.Date DESC;
+END;
+
+-- Ranks teams for a given season based on their win-loss record and point differential
+DROP PROCEDURE IF EXISTS SeasonalTeamRankingsProcedure;
+CREATE PROCEDURE SeasonalTeamRankingsProcedure(IN p_StartYear INT)
+BEGIN
+    SELECT 
+        t.TeamName,
+        COUNT(CASE WHEN (g.HomeTeamID = t.TeamID AND tgs.TotalPoints > ogs.TotalPoints) OR (g.AwayTeamID = t.TeamID AND tgs.TotalPoints > ogs.TotalPoints) THEN 1 END) AS Wins,
+        COUNT(CASE WHEN (g.HomeTeamID = t.TeamID AND tgs.TotalPoints < ogs.TotalPoints) OR (g.AwayTeamID = t.TeamID AND tgs.TotalPoints < ogs.TotalPoints) THEN 1 END) AS Losses,
+        SUM(tgs.TotalPoints) - SUM(ogs.TotalPoints) AS PointDifferential,
+        SUM(tgs.TotalPoints) AS PointsScored,
+        SUM(ogs.TotalPoints) AS PointsAllowed
+    FROM Team t
+    JOIN Game g ON t.TeamID = g.HomeTeamID OR t.TeamID = g.AwayTeamID
+    JOIN TeamGameStatistic tgs ON g.GameID = tgs.GameID AND tgs.TeamID = t.TeamID
+    JOIN TeamGameStatistic ogs ON g.GameID = ogs.GameID AND ogs.TeamID <> t.TeamID
+    WHERE (
+            (MONTH(g.Date) >= 9 AND YEAR(g.Date) = p_StartYear) 
+            OR 
+            (MONTH(g.Date) <= 5 AND YEAR(g.Date) = p_StartYear + 1)
+        )
+    GROUP BY t.TeamID
+    ORDER BY Wins DESC, PointDifferential DESC;
+END;
