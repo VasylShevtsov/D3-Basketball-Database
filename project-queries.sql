@@ -442,8 +442,8 @@ BEGIN
 
     -- Calculate average points scored by the player for the given season and the number of games played
     SELECT 
-        AVG(Points) INTO avg_points,
-        COUNT(*) INTO games_played
+        AVG(Points), COUNT(*) 
+        INTO avg_points, games_played
     FROM PlayerGameStatistic
     JOIN Game ON PlayerGameStatistic.GameID = Game.GameID
     WHERE PlayerID = p_PlayerID
@@ -473,7 +473,7 @@ BEGIN
 
     -- Calculate the winning percentage when the player scores above their average for the season
     SELECT IF(games_played = 0, NULL, (games_won / games_played) * 100) AS WinningImpactPercentage;
-END
+END $$
 
 -- Get Top Scorers From a Specific Game Procedure
 DROP PROCEDURE IF EXISTS GetTopScorersInGame;
