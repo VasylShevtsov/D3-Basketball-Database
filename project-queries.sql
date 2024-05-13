@@ -382,7 +382,7 @@ BEGIN
     ELSE
         SELECT player_stats / total_game_stats AS PlayerImpactEstimate;
 END IF;
-END
+END $$
 
 
 
