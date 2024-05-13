@@ -184,6 +184,7 @@ BEGIN
     JOIN Game ON PlayerGameStatistic.GameID = Game.GameID
     WHERE PlayerID = p_PlayerID 
         AND Game.Date BETWEEN p_StartDate AND p_EndDate;
+    END IF;
 END $$ 
 
 
