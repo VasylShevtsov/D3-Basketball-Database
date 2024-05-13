@@ -231,6 +231,7 @@ BEGIN
         ROUND(AVG(Blocks), 2) AS AvgBlocks,
         ROUND(AVG(Turnovers), 2) AS AvgTurnovers,
         ROUND(AVG(TotalPoints), 2) AS AvgTotalPoints
+    FROM TeamGameStatistic
     JOIN Game ON TeamGameStatistic.GameID = Game.GameID
     WHERE TeamID = p_TeamID AND (
         (MONTH(Game.Date) >= 9 AND YEAR(Game.Date) = p_StartYear) OR
