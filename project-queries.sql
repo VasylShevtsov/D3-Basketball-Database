@@ -162,28 +162,28 @@ BEGIN
         SIGNAL SQLSTATE '45000' -- custom error handling in case dates are invalid
         SET MESSAGE_TEXT = 'Start date must be before end date.';
     ELSE
-    SELECT 
-        p_PlayerID AS PlayerID,
-        ROUND(AVG(FieldGoalsMade), 2) AS AvgFieldGoalsMade,
-        ROUND(AVG(FieldGoalsAttempted), 2) AS AvgFieldGoalsAttempted,
-        ROUND(AVG(ThreePointersMade), 2) AS AvgThreePointersMade,
-        ROUND(AVG(ThreePointersAttempted), 2) AS AvgThreePointersAttempted,
-        ROUND(AVG(FreeThrowsMade), 2) AS AvgFreeThrowsMade,
-        ROUND(AVG(FreeThrowsAttempted), 2) AS AvgFreeThrowsAttempted,
-        ROUND(AVG(PersonalFouls), 2) AS AvgPersonalFouls,
-        ROUND(AVG(Rebounds), 2) AS AvgRebounds,
-        ROUND(AVG(OffensiveRebounds), 2) AS AvgOffensiveRebounds,
-        ROUND(AVG(DefensiveRebounds), 2) AS AvgDefensiveRebounds,
-        ROUND(AVG(Assists), 2) AS AvgAssists,
-        ROUND(AVG(Steals), 2) AS AvgSteals,
-        ROUND(AVG(Blocks), 2) AS AvgBlocks,
-        ROUND(AVG(Turnovers), 2) AS AvgTurnovers,
-        ROUND(AVG(Points), 2) AS AvgPoints,
-        ROUND(AVG(MinutesPlayed), 2) AS AvgMinutesPlayed
-    FROM PlayerGameStatistic
-    JOIN Game ON PlayerGameStatistic.GameID = Game.GameID
-    WHERE PlayerID = p_PlayerID 
-        AND Game.Date BETWEEN p_StartDate AND p_EndDate;
+        SELECT 
+            p_PlayerID AS PlayerID,
+            ROUND(AVG(FieldGoalsMade), 2) AS AvgFieldGoalsMade,
+            ROUND(AVG(FieldGoalsAttempted), 2) AS AvgFieldGoalsAttempted,
+            ROUND(AVG(ThreePointersMade), 2) AS AvgThreePointersMade,
+            ROUND(AVG(ThreePointersAttempted), 2) AS AvgThreePointersAttempted,
+            ROUND(AVG(FreeThrowsMade), 2) AS AvgFreeThrowsMade,
+            ROUND(AVG(FreeThrowsAttempted), 2) AS AvgFreeThrowsAttempted,
+            ROUND(AVG(PersonalFouls), 2) AS AvgPersonalFouls,
+            ROUND(AVG(Rebounds), 2) AS AvgRebounds,
+            ROUND(AVG(OffensiveRebounds), 2) AS AvgOffensiveRebounds,
+            ROUND(AVG(DefensiveRebounds), 2) AS AvgDefensiveRebounds,
+            ROUND(AVG(Assists), 2) AS AvgAssists,
+            ROUND(AVG(Steals), 2) AS AvgSteals,
+            ROUND(AVG(Blocks), 2) AS AvgBlocks,
+            ROUND(AVG(Turnovers), 2) AS AvgTurnovers,
+            ROUND(AVG(Points), 2) AS AvgPoints,
+            ROUND(AVG(MinutesPlayed), 2) AS AvgMinutesPlayed
+        FROM PlayerGameStatistic
+        JOIN Game ON PlayerGameStatistic.GameID = Game.GameID
+        WHERE PlayerID = p_PlayerID 
+            AND Game.Date BETWEEN p_StartDate AND p_EndDate;
     END IF;
 END $$ 
 
@@ -237,7 +237,7 @@ BEGIN
         (MONTH(Game.Date) >= 9 AND YEAR(Game.Date) = p_StartYear) OR
         (MONTH(Game.Date) <= 5 AND YEAR(Game.Date) = p_StartYear + 1)
     );
-END $$ 
+END $$
 
 -- Get Team Season Statistics Procedure with Date Range
 DROP PROCEDURE IF EXISTS GetTeamSeasonStatisticsBetweenDates;
@@ -381,7 +381,7 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Game statistics cannot be zero.';
     ELSE
         SELECT player_stats / total_game_stats AS PlayerImpactEstimate;
-END IF;
+    END IF;
 END $$
 
 
@@ -393,50 +393,37 @@ CREATE PROCEDURE CalculateSeasonPlayerPIE(
     IN p_StartYear INT
 )
 BEGIN
-    -- Temporary table to store individual game PIE values
-    CREATE TEMPORARY TABLE IF NOT EXISTS TempPIE (GamePIE DOUBLE);
+    -- Drop and recreate the temporary table to ensure it's clean
+    DROP TEMPORARY TABLE IF EXISTS TempPIE;
+    CREATE TEMPORARY TABLE TempPIE (GamePIE DOUBLE);
 
-    -- Find all relevant games within the academic year
-    DECLARE cur CURSOR FOR
-        SELECT GameID 
-        FROM Game
-        WHERE (MONTH(Date) >= 9 AND YEAR(Date) = p_StartYear) OR (MONTH(Date) <= 5 AND YEAR(Date) = p_StartYear + 1);
-    
-    DECLARE v_GameID SMALLINT;
-    DECLARE done INT DEFAULT FALSE;
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
-    
-    OPEN cur;
-    game_loop: LOOP
-        FETCH cur INTO v_GameID;
-        IF done THEN
-            LEAVE game_loop;
-        END IF;
+    -- Insert PIE calculations directly into TempPIE for relevant games
+    INSERT INTO TempPIE (GamePIE)
+    SELECT player_stats / total_game_stats AS PlayerImpactEstimate
+    FROM (
+        SELECT 
+            GameID,
+            (Points + FieldGoalsMade + FreeThrowsMade - FieldGoalsAttempted - FreeThrowsAttempted +
+            DefensiveRebounds + (OffensiveRebounds / 2) + Assists + Steals + (Blocks / 2) - 
+            PersonalFouls - Turnovers) AS player_stats,
+            (SUM(Points) + SUM(FieldGoalsMade) + SUM(FreeThrowsMade) - SUM(FieldGoalsAttempted) - SUM(FreeThrowsAttempted) +
+            SUM(DefensiveRebounds) + (SUM(OffensiveRebounds) / 2) + SUM(Assists) + SUM(Steals) + 
+            (SUM(Blocks) / 2) - SUM(PersonalFouls) - SUM(Turnovers)) AS total_game_stats
+        FROM PlayerGameStatistic
+        JOIN TeamGameStatistic USING (GameID)
+        JOIN Game ON PlayerGameStatistic.GameID = Game.GameID
+        WHERE PlayerID = p_PlayerID AND (
+            (MONTH(Date) >= 9 AND YEAR(Date) = p_StartYear) OR
+            (MONTH(Date) <= 5 AND YEAR(Date) = p_StartYear + 1)
+        )
+        GROUP BY GameID
+    ) AS GameStats
+    WHERE total_game_stats != 0;
 
-        -- Calculate PIE for each game and store in the temporary table
-        INSERT INTO TempPIE (GamePIE)
-        SELECT player_stats / total_game_stats AS PlayerImpactEstimate
-        FROM (
-            SELECT 
-                (Points + FieldGoalsMade + FreeThrowsMade - FieldGoalsAttempted - FreeThrowsAttempted +
-                DefensiveRebounds + (OffensiveRebounds/2) + Assists + Steals + (Blocks/2) - 
-                PersonalFouls - Turnovers) AS player_stats,
-                (SUM(TotalPoints) + SUM(FieldGoalsMade) + SUM(FreeThrowsMade) - SUM(FieldGoalsAttempted) - SUM(FreeThrowsAttempted) +
-                SUM(DefensiveRebounds) + (SUM(OffensiveRebounds)/2) + SUM(Assists) + SUM(Steals) + 
-                (SUM(Blocks)/2) - SUM(PersonalFouls) - SUM(Turnovers)) AS total_game_stats
-            FROM PlayerGameStatistic
-            JOIN TeamGameStatistic USING (GameID)
-            WHERE PlayerID = p_PlayerID AND GameID = v_GameID
-            GROUP BY GameID
-        ) AS GameStats
-        WHERE total_game_stats != 0;
-
-    END LOOP;
-    CLOSE cur;
-
+    -- Calculate the average of PIE from TempPIE and clean up
     SELECT AVG(GamePIE) AS SeasonPlayerImpactEstimate FROM TempPIE;
-    DROP TABLE TempPIE;
-END $$ 
+    DROP TEMPORARY TABLE IF EXISTS TempPIE;
+END $$
 
 
 -- Custom formula to find the impact of a player on their team's performance in a given season
