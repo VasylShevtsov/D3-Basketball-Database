@@ -260,9 +260,9 @@ BEGIN
     );
 END $$
 
--- Get Team Season Statistics Procedure with Date Range
-DROP PROCEDURE IF EXISTS GetTeamSeasonStatisticsBetweenDates$$
-CREATE PROCEDURE GetTeamSeasonStatisticsBetweenDates(
+-- Get Team Statistics Between Dates 
+DROP PROCEDURE IF EXISTS GetTeamStatisticsBetweenDates$$
+CREATE PROCEDURE GetTeamStatisticsBetweenDates(
     IN p_TeamID SMALLINT,
     IN p_StartDate DATE,
     IN p_EndDate DATE
