@@ -16,6 +16,7 @@ DELIMITER $$
 -- Insert Player Procedure
 DROP PROCEDURE IF EXISTS NewPlayer$$
 CREATE PROCEDURE NewPlayer(
+    IN p_PlayerID SMALLINT,
     IN p_FirstName VARCHAR(40),
     IN p_LastName VARCHAR(40),
     IN p_TeamID SMALLINT,
@@ -25,8 +26,8 @@ CREATE PROCEDURE NewPlayer(
     IN p_HighSchool VARCHAR(40)
 )
 BEGIN
-    INSERT INTO Player (FirstName, LastName, TeamID, Position, HeightInches, Weight, HighSchool)
-    VALUES (p_FirstName, p_LastName, p_TeamID, p_Position, p_HeightInches, p_Weight, p_HighSchool);
+    INSERT INTO Player (PlayerID, FirstName, LastName, TeamID, Position, HeightInches, Weight, HighSchool)
+    VALUES (p_PlayerID, p_FirstName, p_LastName, p_TeamID, p_Position, p_HeightInches, p_Weight, p_HighSchool);
 END $$ 
 
 
@@ -40,6 +41,25 @@ BEGIN
     WHERE PlayerID = p_PlayerID;
 END $$ 
 
+-- Delete Team Procedure
+DROP PROCEDURE IF EXISTS DeleteTeam$$
+CREATE PROCEDURE DeleteTeam(
+    IN p_TeamID SMALLINT
+)
+BEGIN
+    DELETE FROM Team
+    WHERE TeamID = p_TeamID;
+END $$
+
+-- Delete Game Procedure
+DROP PROCEDURE IF EXISTS DeleteGame$$
+CREATE PROCEDURE DeleteGame(
+    IN p_GameID SMALLINT
+)
+BEGIN
+    DELETE FROM Game
+    WHERE GameID = p_GameID;
+END $$
 
 -- Update Player Procedure
 DROP PROCEDURE IF EXISTS UpdatePlayer$$
