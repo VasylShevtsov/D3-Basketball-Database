@@ -1,4 +1,5 @@
 -- Title: D3 Basketball Database
+-- File: Project Queries
 -- Authors: Aidan Von Buchwaldt, Basil Shevtsov, and Jai Deshpande
 -- Sources:
     -- MySQL Error Handling: 
