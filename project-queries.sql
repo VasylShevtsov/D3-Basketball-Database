@@ -547,8 +547,8 @@ BEGIN
 END $$ 
 
 -- Ranks teams for a given season based on their win-loss record and point differential
-DROP PROCEDURE IF EXISTS SeasonalTeamRankingsProcedure$$
-CREATE PROCEDURE SeasonalTeamRankingsProcedure(IN p_StartYear INT)
+DROP PROCEDURE IF EXISTS SeasonalTeamRanking$$
+CREATE PROCEDURE SeasonalTeamRanking(IN p_StartYear INT)
 BEGIN
     SELECT 
         t.TeamName,
