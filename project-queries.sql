@@ -496,7 +496,7 @@ END $$
 
 -- Retrieve a log of all games played by a specific player
 DROP PROCEDURE IF EXISTS GetPlayerGameLog;
-CREATE PROCEDURE PlayerGameLogProcedure(IN p_PlayerID SMALLINT)
+CREATE PROCEDURE GetPlayerGameLog(IN p_PlayerID SMALLINT)
 BEGIN
     SELECT 
         p.FirstName,
