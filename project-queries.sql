@@ -357,19 +357,20 @@ BEGIN
     SELECT 
         CONCAT(p_StartYear, '-', p_StartYear + 1) AS Season,
         SUM(
-            Points + Rebounds + Assists + Steals + Blocks 
-            - (FieldGoalsAttempted - FieldGoalsMade)
-            - (FreeThrowsAttempted - FreeThrowsMade)
-            - Turnovers
-        ) / COUNT(GameID) AS EfficiencyRating
-    FROM PlayerGameStatistic
-    JOIN Game ON PlayerGameStatistic.GameID = Game.GameID
-    WHERE PlayerID = p_PlayerID AND (
-        (MONTH(Game.Date) >= 9 AND YEAR(Game.Date) = p_StartYear) OR
-        (MONTH(Game.Date) <= 5 AND YEAR(Game.Date) = p_StartYear + 1)
+            pgs.Points + pgs.Rebounds + pgs.Assists + pgs.Steals + pgs.Blocks 
+            - (pgs.FieldGoalsAttempted - pgs.FieldGoalsMade)
+            - (pgs.FreeThrowsAttempted - pgs.FreeThrowsMade)
+            - pgs.Turnovers
+        ) / COUNT(pgs.GameID) AS EfficiencyRating
+    FROM PlayerGameStatistic pgs
+    JOIN Game g ON pgs.GameID = g.GameID
+    WHERE pgs.PlayerID = p_PlayerID AND (
+        (MONTH(g.Date) >= 9 AND YEAR(g.Date) = p_StartYear) OR
+        (MONTH(g.Date) <= 5 AND YEAR(g.Date) = p_StartYear + 1)
     )
     GROUP BY CONCAT(p_StartYear, '-', p_StartYear + 1);
 END $$ 
+
 
 -- Calculate Player Impact Estimate (PIE) for a given game
 -- Formula: (PTS + FGM + FTM - FGA - FTA + DREB + (.5 * OREB) + AST + STL + (.5 * BLK) - PF - TO) / 
