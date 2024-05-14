@@ -479,7 +479,7 @@ END $$
 DROP PROCEDURE IF EXISTS GetTopScorersInGame;
 CREATE PROCEDURE GetTopScorersInGame(
     IN p_GameID SMALLINT,
-    IN p_Limit INT DEFAULT 5
+    IN p_Limit INT
 )
 BEGIN
     SELECT 
