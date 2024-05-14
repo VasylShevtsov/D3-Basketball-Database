@@ -1,3 +1,6 @@
+-- Title: D3 Basketball Database
+-- File: Project Data for TeamGameStatistics Table
+-- Authors: Aidan Von Buchwaldt, Basil Shevtsov, and Jai Deshpande
 INSERT INTO TeamGameStatistic (TeamID, GameID, HomeOrAway, FieldGoalsMade, FieldGoalsAttempted, ThreePointersMade, ThreePointersAttempted, FreeThrowsMade, FreeThrowsAttempted, PersonalFouls, Rebounds, OffensiveRebounds, DefensiveRebounds, Assists, Steals, Blocks, Turnovers, TotalPoints) VALUES (1, 1, 'Home', 67, 108, 33, 83, 35, 75, 33, 59, 25, 34, 45, 25, 32, 32, 268);
 INSERT INTO TeamGameStatistic (TeamID, GameID, HomeOrAway, FieldGoalsMade, FieldGoalsAttempted, ThreePointersMade, ThreePointersAttempted, FreeThrowsMade, FreeThrowsAttempted, PersonalFouls, Rebounds, OffensiveRebounds, DefensiveRebounds, Assists, Steals, Blocks, Turnovers, TotalPoints) VALUES (14, 1, 'Away', 60, 103, 41, 96, 39, 76, 31, 104, 50, 54, 50, 25, 27, 29, 282);
 INSERT INTO TeamGameStatistic (TeamID, GameID, HomeOrAway, FieldGoalsMade, FieldGoalsAttempted, ThreePointersMade, ThreePointersAttempted, FreeThrowsMade, FreeThrowsAttempted, PersonalFouls, Rebounds, OffensiveRebounds, DefensiveRebounds, Assists, Steals, Blocks, Turnovers, TotalPoints) VALUES (1, 2, 'Home', 60, 112, 32, 103, 27, 61, 36, 79, 46, 33, 45, 27, 22, 35, 243);

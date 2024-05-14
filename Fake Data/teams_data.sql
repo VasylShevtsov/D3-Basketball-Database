@@ -1,3 +1,6 @@
+-- Title: D3 Basketball Database
+-- File: Project Data for Teams Table
+-- Authors: Aidan Von Buchwaldt, Basil Shevtsov, and Jai Deshpande
 INSERT INTO Team (TeamID, TeamName, Location) VALUES (1, 'Gibson-Harper', 'East Jennifer');
 INSERT INTO Team (TeamID, TeamName, Location) VALUES (2, 'Gordon Ltd', 'South Dianastad');
 INSERT INTO Team (TeamID, TeamName, Location) VALUES (3, 'Burton-Smith', 'West Virginia');

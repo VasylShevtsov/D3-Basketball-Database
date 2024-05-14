@@ -1,3 +1,6 @@
+-- Title: D3 Basketball Database
+-- File: Project Data for Games Table
+-- Authors: Aidan Von Buchwaldt, Basil Shevtsov, and Jai Deshpande
 INSERT INTO Game (GameID, HomeTeamID, AwayTeamID, Date) VALUES (1, 1, 14, '2021-02-03');
 INSERT INTO Game (GameID, HomeTeamID, AwayTeamID, Date) VALUES (2, 1, 25, '2021-01-15');
 INSERT INTO Game (GameID, HomeTeamID, AwayTeamID, Date) VALUES (3, 1, 23, '2021-03-07');
