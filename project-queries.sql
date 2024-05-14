@@ -13,7 +13,7 @@
 DELIMITER $$
 
 -- Insert Player Procedure
-DROP PROCEDURE IF EXISTS NewPlayer;
+DROP PROCEDURE IF EXISTS NewPlayer$$
 CREATE PROCEDURE NewPlayer(
     IN p_FirstName VARCHAR(40),
     IN p_LastName VARCHAR(40),
@@ -30,7 +30,7 @@ END $$
 
 
 -- Delete Player Procedure
-DROP PROCEDURE IF EXISTS DeletePlayer;
+DROP PROCEDURE IF EXISTS DeletePlayer$$
 CREATE PROCEDURE DeletePlayer(
     IN p_PlayerID SMALLINT
 )
@@ -41,7 +41,7 @@ END $$
 
 
 -- Update Player Procedure
-DROP PROCEDURE IF EXISTS UpdatePlayer;
+DROP PROCEDURE IF EXISTS UpdatePlayer$$
 CREATE PROCEDURE UpdatePlayer(
     IN p_PlayerID SMALLINT,
     IN p_FirstName VARCHAR(40),
@@ -77,7 +77,7 @@ END $$
 
 
 -- Get Player Stats From Specific Game Procedure
-DROP PROCEDURE IF EXISTS GetPlayerStats;
+DROP PROCEDURE IF EXISTS GetPlayerStats$$
 CREATE PROCEDURE GetPlayerStats(
     IN p_PlayerID SMALLINT,
     IN p_GameID SMALLINT
@@ -90,7 +90,7 @@ END $$
 
 
 -- Get Team Stats From Specific Game Procedure
-DROP PROCEDURE IF EXISTS GetTeamStats;
+DROP PROCEDURE IF EXISTS GetTeamStats$$
 CREATE PROCEDURE GetTeamStats(
     IN p_TeamID SMALLINT,
     IN p_GameID SMALLINT
@@ -103,7 +103,7 @@ END $$
 
 
 -- Get Both Teams Stats From Specific Game Procedure
-DROP PROCEDURE IF EXISTS GetBothTeamStats;
+DROP PROCEDURE IF EXISTS GetBothTeamStats$$
 CREATE PROCEDURE GetBothTeamStats(
     IN p_GameID SMALLINT
 )
@@ -116,7 +116,7 @@ END $$
 
 
 -- Get Player's Season Averages Procedure for Academic Year (using the start year)
-DROP PROCEDURE IF EXISTS GetPlayerSeasonAverages;
+DROP PROCEDURE IF EXISTS GetPlayerSeasonAverages$$
 CREATE PROCEDURE GetPlayerSeasonAverages(
     IN p_StartYear INT,
     IN p_PlayerID SMALLINT
@@ -151,7 +151,7 @@ END $$
 
 
 -- Get Player's Averages Between Specific Dates Procedure
-DROP PROCEDURE IF EXISTS GetPlayerAveragesBetweenDates;
+DROP PROCEDURE IF EXISTS GetPlayerAveragesBetweenDates$$
 CREATE PROCEDURE GetPlayerAveragesBetweenDates(
     IN p_PlayerID SMALLINT,
     IN p_StartDate DATE,
@@ -189,7 +189,7 @@ END $$
 
 
 -- Get All Games Played By a Team Procedure
-DROP PROCEDURE IF EXISTS GetTeamGameHistory;
+DROP PROCEDURE IF EXISTS GetTeamGameHistory$$
 CREATE PROCEDURE GetTeamGameHistory(
     IN p_TeamID SMALLINT
 )
@@ -212,7 +212,7 @@ BEGIN
 END $$ 
 
 -- Get Team Season Statistics Procedure
-DROP PROCEDURE IF EXISTS GetTeamSeasonStatistics;
+DROP PROCEDURE IF EXISTS GetTeamSeasonStatistics$$
 CREATE PROCEDURE GetTeamSeasonStatistics(IN p_TeamID SMALLINT, IN p_StartYear INT)
 BEGIN
     SELECT 
@@ -240,7 +240,7 @@ BEGIN
 END $$
 
 -- Get Team Season Statistics Procedure with Date Range
-DROP PROCEDURE IF EXISTS GetTeamSeasonStatisticsBetweenDates;
+DROP PROCEDURE IF EXISTS GetTeamSeasonStatisticsBetweenDates$$
 CREATE PROCEDURE GetTeamSeasonStatisticsBetweenDates(
     IN p_TeamID SMALLINT,
     IN p_StartDate DATE,
@@ -275,7 +275,7 @@ BEGIN
 END $$ 
 
 -- Get Two Player's Season Averages for Academic Year (using the start year)
-DROP PROCEDURE IF EXISTS ComparePlayersSeasonAverages;
+DROP PROCEDURE IF EXISTS ComparePlayersSeasonAverages$$
 CREATE PROCEDURE ComparePlayersSeasonAverages(IN p_PlayerID1 SMALLINT, IN p_PlayerID2 SMALLINT, IN p_StartYear INT)
 BEGIN
     SELECT 
@@ -307,7 +307,7 @@ END $$
 
 
 -- Finds the MVP of the Season for the Academic Year (using start year)
-DROP PROCEDURE IF EXISTS MVPofTheSeason;
+DROP PROCEDURE IF EXISTS MVPofTheSeason$$
 CREATE PROCEDURE MVPofTheSeason(IN p_SeasonStartYear INT)
 BEGIN
     SELECT 
@@ -330,7 +330,7 @@ END $$
 -- Find the efficiency rating of a player for an academic year
 -- Formula: (PTS + REB + AST + STL + BLK − Missed FG − Missed FT - TO) / GP
 -- See Wikipedia page for efficiency ratings: https://en.wikipedia.org/wiki/Efficiency_(basketball)
-DROP PROCEDURE IF EXISTS TrackPlayerEfficiency;
+DROP PROCEDURE IF EXISTS TrackPlayerEfficiency$$
 CREATE PROCEDURE TrackPlayerEfficiency(IN p_PlayerID SMALLINT, IN p_StartYear INT)
 BEGIN
     SELECT 
@@ -355,7 +355,7 @@ END $$
 -- (GmPTS + GmFGM + GmFTM - GmFGA - GmFTA + GmDREB + (.5 * GmOREB) + GmAST + GmSTL + (.5 * GmBLK) - GmPF - GmTO)
 -- See NBAstuffer for PIE description: https://www.nbastuffer.com/analytics101/player-impact-estimate-pie/
 -- To clarify the abbreviations, paste into ChatGPT and ask for the full terms, it's too long to include here
-DROP PROCEDURE IF EXISTS CalculatePlayerPIE;
+DROP PROCEDURE IF EXISTS CalculatePlayerPIE$$
 CREATE PROCEDURE CalculatePlayerPIE(IN player_id SMALLINT, IN game_id SMALLINT)
 BEGIN
     DECLARE total_game_stats DOUBLE;
@@ -387,7 +387,7 @@ END $$
 
 
 -- Calculate Player Impact Estimate (PIE) for a given season
-DROP PROCEDURE IF EXISTS CalculateSeasonPlayerPIE;
+DROP PROCEDURE IF EXISTS CalculateSeasonPlayerPIE$$
 CREATE PROCEDURE CalculateSeasonPlayerPIE(
     IN p_PlayerID SMALLINT,
     IN p_StartYear INT
@@ -430,7 +430,7 @@ END $$
 -- The impact is measured by the player's scoring performance in games where the team won
 -- We are looking at how often the team wins when a player scores above their average.
 -- Returns the winning percentage when the player scores above their average for the season
-DROP PROCEDURE IF EXISTS GetPlayerSuccessImpact;
+DROP PROCEDURE IF EXISTS GetPlayerSuccessImpact$$
 CREATE PROCEDURE GetPlayerSuccessImpact(
     IN p_PlayerID SMALLINT,
     IN p_StartYear INT
@@ -476,7 +476,7 @@ BEGIN
 END $$
 
 -- Get Top Scorers From a Specific Game Procedure
-DROP PROCEDURE IF EXISTS GetTopScorersInGame;
+DROP PROCEDURE IF EXISTS GetTopScorersInGame$$
 CREATE PROCEDURE GetTopScorersInGame(
     IN p_GameID SMALLINT,
     IN p_Limit INT
@@ -495,7 +495,7 @@ BEGIN
 END $$ 
 
 -- Retrieve a log of all games played by a specific player
-DROP PROCEDURE IF EXISTS GetPlayerGameLog;
+DROP PROCEDURE IF EXISTS GetPlayerGameLog$$
 CREATE PROCEDURE GetPlayerGameLog(IN p_PlayerID SMALLINT)
 BEGIN
     SELECT 
@@ -530,7 +530,7 @@ BEGIN
 END $$ 
 
 -- Ranks teams for a given season based on their win-loss record and point differential
-DROP PROCEDURE IF EXISTS SeasonalTeamRankingsProcedure;
+DROP PROCEDURE IF EXISTS SeasonalTeamRankingsProcedure$$
 CREATE PROCEDURE SeasonalTeamRankingsProcedure(IN p_StartYear INT)
 BEGIN
     SELECT 
@@ -555,7 +555,7 @@ END $$
 
 -- Verify Points Procedure
 -- Finds if there is a discrepancy between the total points scored by players on a team and the total points recorded for the team in a game
-DROP PROCEDURE IF EXISTS VerifyPoints;
+DROP PROCEDURE IF EXISTS VerifyPoints$$
 CREATE PROCEDURE VerifyPoints(IN p_GameID SMALLINT, IN p_TeamID SMALLINT)
 BEGIN
     DECLARE PlayerPoints INT DEFAULT 0;
@@ -592,7 +592,7 @@ END $$
 
 -- Verify All Stats Procedure
 -- Finds discrepancies between all major statistical totals recorded for players and those recorded for their teams in a game
-DROP PROCEDURE IF EXISTS VerifyAllStats;
+DROP PROCEDURE IF EXISTS VerifyAllStats$$
 CREATE PROCEDURE VerifyAllStats(IN p_GameID SMALLINT, IN p_TeamID SMALLINT)
 BEGIN
     DECLARE PlayerFGMade, PlayerFGAttempted, Player3PMade, Player3PAttempted, PlayerFTMade, PlayerFTAttempted,
@@ -689,7 +689,7 @@ END $$
 
 
 -- Trigger to log player deletions
-DROP TRIGGER IF EXISTS LogDeletePlayer;
+DROP TRIGGER IF EXISTS LogDeletePlayer$$
 CREATE TRIGGER LogDeletePlayer
 AFTER DELETE ON Player
 FOR EACH ROW
@@ -699,7 +699,7 @@ BEGIN
 END $$ 
 
 -- Trigger to log team deletions
-DROP TRIGGER IF EXISTS LogDeleteTeam;
+DROP TRIGGER IF EXISTS LogDeleteTeam$$
 CREATE TRIGGER LogDeleteTeam
 AFTER DELETE ON Team
 FOR EACH ROW
@@ -709,7 +709,7 @@ BEGIN
 END $$ 
 
 -- Trigger to log game deletions
-DROP TRIGGER IF EXISTS LogDeleteGame;
+DROP TRIGGER IF EXISTS LogDeleteGame$$
 CREATE TRIGGER LogDeleteGame
 AFTER DELETE ON Game
 FOR EACH ROW
@@ -719,7 +719,7 @@ BEGIN
 END $$ 
 
 -- Trigger to check for any stat discrepancy upon insert of a team game statistic entry
-DROP TRIGGER IF EXISTS trg_VerifyStatsAfterInsert;
+DROP TRIGGER IF EXISTS trg_VerifyStatsAfterInsert$$
 CREATE TRIGGER trg_VerifyStatsAfterInsert
 AFTER INSERT ON TeamGameStatistic
 FOR EACH ROW
@@ -727,4 +727,4 @@ BEGIN
     CALL VerifyAllStats(NEW.GameID, NEW.TeamID);
 END $$ 
 
-DELIMETER ;
+DELIMITER ;
