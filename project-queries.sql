@@ -497,8 +497,7 @@ END $$
 -- Get Top Scorers From a Specific Game Procedure
 DROP PROCEDURE IF EXISTS GetTopScorersInGame$$
 CREATE PROCEDURE GetTopScorersInGame(
-    IN p_GameID SMALLINT,
-    IN p_Limit INT
+    IN p_GameID SMALLINT
 )
 BEGIN
     SELECT 
@@ -509,8 +508,7 @@ BEGIN
     FROM PlayerGameStatistic ps
     JOIN Player p ON ps.PlayerID = p.PlayerID
     WHERE ps.GameID = p_GameID
-    ORDER BY ps.Points DESC
-    LIMIT p_Limit;
+    ORDER BY ps.Points DESC;
 END $$ 
 
 -- Retrieve a log of all games played by a specific player
