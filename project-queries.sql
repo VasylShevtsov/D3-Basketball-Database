@@ -10,8 +10,10 @@
     -- Player Impact Estimate (PIE): https://www.nbastuffer.com/analytics101/player-impact-estimate-pie/
     -- NBA terminology glossary: https://www.nba.com/stats/help/glossary
 
+DELIMITER $$
+
 -- Insert Player Procedure
-DROP PROCEDURE IF EXISTS NewPlayer;
+DROP PROCEDURE IF EXISTS NewPlayer$$
 CREATE PROCEDURE NewPlayer(
     IN p_FirstName VARCHAR(40),
     IN p_LastName VARCHAR(40),
@@ -22,37 +24,24 @@ CREATE PROCEDURE NewPlayer(
     IN p_HighSchool VARCHAR(40)
 )
 BEGIN
-    -- Error handling to manage cases where the insert might fail
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK;
-        -- Get error details
-        GET DIAGNOSTICS CONDITION 1 
-            @sql_state = RETURNED_SQLSTATE, @err_no = MYSQL_ERRNO, @msg_text = MESSAGE_TEXT;
-        -- Make the error message
-        SET @full_error = CONCAT('Error ', @err_no, ' (SQLState ', @sql_state, '): ', @msg_text);
-        -- Return the error message
-        SELECT @full_error AS Error_Message;
-    END;
-
     INSERT INTO Player (FirstName, LastName, TeamID, Position, HeightInches, Weight, HighSchool)
     VALUES (p_FirstName, p_LastName, p_TeamID, p_Position, p_HeightInches, p_Weight, p_HighSchool);
-END;
+END $$ 
 
 
 -- Delete Player Procedure
-DROP PROCEDURE IF EXISTS DeletePlayer;
+DROP PROCEDURE IF EXISTS DeletePlayer$$
 CREATE PROCEDURE DeletePlayer(
     IN p_PlayerID SMALLINT
 )
 BEGIN
     DELETE FROM Player
     WHERE PlayerID = p_PlayerID;
-END;
+END $$ 
 
 
 -- Update Player Procedure
-DROP PROCEDURE IF EXISTS UpdatePlayer;
+DROP PROCEDURE IF EXISTS UpdatePlayer$$
 CREATE PROCEDURE UpdatePlayer(
     IN p_PlayerID SMALLINT,
     IN p_FirstName VARCHAR(40),
@@ -84,11 +73,11 @@ BEGIN
     ELSE
         SELECT CONCAT('Updated ', affected_rows, ' player(s).') AS Message;
     END IF;
-END;
+END $$ 
 
 
 -- Get Player Stats From Specific Game Procedure
-DROP PROCEDURE IF EXISTS GetPlayerStats;
+DROP PROCEDURE IF EXISTS GetPlayerStats$$
 CREATE PROCEDURE GetPlayerStats(
     IN p_PlayerID SMALLINT,
     IN p_GameID SMALLINT
@@ -97,11 +86,11 @@ BEGIN
     SELECT *
     FROM PlayerGameStatistic
     WHERE PlayerID = p_PlayerID AND GameID = p_GameID;
-END;
+END $$ 
 
 
 -- Get Team Stats From Specific Game Procedure
-DROP PROCEDURE IF EXISTS GetTeamStats;
+DROP PROCEDURE IF EXISTS GetTeamStats$$
 CREATE PROCEDURE GetTeamStats(
     IN p_TeamID SMALLINT,
     IN p_GameID SMALLINT
@@ -110,11 +99,11 @@ BEGIN
     SELECT *
     FROM TeamGameStatistic
     WHERE TeamID = p_TeamID AND GameID = p_GameID;
-END;
+END $$ 
 
 
 -- Get Both Teams Stats From Specific Game Procedure
-DROP PROCEDURE IF EXISTS GetBothTeamStats;
+DROP PROCEDURE IF EXISTS GetBothTeamStats$$
 CREATE PROCEDURE GetBothTeamStats(
     IN p_GameID SMALLINT
 )
@@ -123,11 +112,11 @@ BEGIN
     FROM TeamGameStatistic tg
     JOIN Team t ON tg.TeamID = t.TeamID
     WHERE tg.GameID = p_GameID;
-END;
+END $$ 
 
 
 -- Get Player's Season Averages Procedure for Academic Year (using the start year)
-DROP PROCEDURE IF EXISTS GetPlayerSeasonAverages;
+DROP PROCEDURE IF EXISTS GetPlayerSeasonAverages$$
 CREATE PROCEDURE GetPlayerSeasonAverages(
     IN p_StartYear INT,
     IN p_PlayerID SMALLINT
@@ -158,11 +147,11 @@ BEGIN
             OR 
             (MONTH(Game.Date) <= 5 AND YEAR(Game.Date) = p_StartYear + 1)
         );
-END;
+END $$ 
 
 
 -- Get Player's Averages Between Specific Dates Procedure
-DROP PROCEDURE IF EXISTS GetPlayerAveragesBetweenDates;
+DROP PROCEDURE IF EXISTS GetPlayerAveragesBetweenDates$$
 CREATE PROCEDURE GetPlayerAveragesBetweenDates(
     IN p_PlayerID SMALLINT,
     IN p_StartDate DATE,
@@ -173,33 +162,34 @@ BEGIN
         SIGNAL SQLSTATE '45000' -- custom error handling in case dates are invalid
         SET MESSAGE_TEXT = 'Start date must be before end date.';
     ELSE
-    SELECT 
-        p_PlayerID AS PlayerID,
-        ROUND(AVG(FieldGoalsMade), 2) AS AvgFieldGoalsMade,
-        ROUND(AVG(FieldGoalsAttempted), 2) AS AvgFieldGoalsAttempted,
-        ROUND(AVG(ThreePointersMade), 2) AS AvgThreePointersMade,
-        ROUND(AVG(ThreePointersAttempted), 2) AS AvgThreePointersAttempted,
-        ROUND(AVG(FreeThrowsMade), 2) AS AvgFreeThrowsMade,
-        ROUND(AVG(FreeThrowsAttempted), 2) AS AvgFreeThrowsAttempted,
-        ROUND(AVG(PersonalFouls), 2) AS AvgPersonalFouls,
-        ROUND(AVG(Rebounds), 2) AS AvgRebounds,
-        ROUND(AVG(OffensiveRebounds), 2) AS AvgOffensiveRebounds,
-        ROUND(AVG(DefensiveRebounds), 2) AS AvgDefensiveRebounds,
-        ROUND(AVG(Assists), 2) AS AvgAssists,
-        ROUND(AVG(Steals), 2) AS AvgSteals,
-        ROUND(AVG(Blocks), 2) AS AvgBlocks,
-        ROUND(AVG(Turnovers), 2) AS AvgTurnovers,
-        ROUND(AVG(Points), 2) AS AvgPoints,
-        ROUND(AVG(MinutesPlayed), 2) AS AvgMinutesPlayed
-    FROM PlayerGameStatistic
-    JOIN Game ON PlayerGameStatistic.GameID = Game.GameID
-    WHERE PlayerID = p_PlayerID 
-        AND Game.Date BETWEEN p_StartDate AND p_EndDate;
-END;
+        SELECT 
+            p_PlayerID AS PlayerID,
+            ROUND(AVG(FieldGoalsMade), 2) AS AvgFieldGoalsMade,
+            ROUND(AVG(FieldGoalsAttempted), 2) AS AvgFieldGoalsAttempted,
+            ROUND(AVG(ThreePointersMade), 2) AS AvgThreePointersMade,
+            ROUND(AVG(ThreePointersAttempted), 2) AS AvgThreePointersAttempted,
+            ROUND(AVG(FreeThrowsMade), 2) AS AvgFreeThrowsMade,
+            ROUND(AVG(FreeThrowsAttempted), 2) AS AvgFreeThrowsAttempted,
+            ROUND(AVG(PersonalFouls), 2) AS AvgPersonalFouls,
+            ROUND(AVG(Rebounds), 2) AS AvgRebounds,
+            ROUND(AVG(OffensiveRebounds), 2) AS AvgOffensiveRebounds,
+            ROUND(AVG(DefensiveRebounds), 2) AS AvgDefensiveRebounds,
+            ROUND(AVG(Assists), 2) AS AvgAssists,
+            ROUND(AVG(Steals), 2) AS AvgSteals,
+            ROUND(AVG(Blocks), 2) AS AvgBlocks,
+            ROUND(AVG(Turnovers), 2) AS AvgTurnovers,
+            ROUND(AVG(Points), 2) AS AvgPoints,
+            ROUND(AVG(MinutesPlayed), 2) AS AvgMinutesPlayed
+        FROM PlayerGameStatistic
+        JOIN Game ON PlayerGameStatistic.GameID = Game.GameID
+        WHERE PlayerID = p_PlayerID 
+            AND Game.Date BETWEEN p_StartDate AND p_EndDate;
+    END IF;
+END $$ 
 
 
 -- Get All Games Played By a Team Procedure
-DROP PROCEDURE IF EXISTS GetTeamGameHistory;
+DROP PROCEDURE IF EXISTS GetTeamGameHistory$$
 CREATE PROCEDURE GetTeamGameHistory(
     IN p_TeamID SMALLINT
 )
@@ -219,10 +209,10 @@ BEGIN
     JOIN Team at ON g.AwayTeamID = at.TeamID -- Away team
     WHERE tg.TeamID = p_TeamID
     ORDER BY g.Date;
-END;
+END $$ 
 
 -- Get Team Season Statistics Procedure
-DROP PROCEDURE IF EXISTS GetTeamSeasonStatistics;
+DROP PROCEDURE IF EXISTS GetTeamSeasonStatistics$$
 CREATE PROCEDURE GetTeamSeasonStatistics(IN p_TeamID SMALLINT, IN p_StartYear INT)
 BEGIN
     SELECT 
@@ -241,15 +231,16 @@ BEGIN
         ROUND(AVG(Blocks), 2) AS AvgBlocks,
         ROUND(AVG(Turnovers), 2) AS AvgTurnovers,
         ROUND(AVG(TotalPoints), 2) AS AvgTotalPoints
+    FROM TeamGameStatistic
     JOIN Game ON TeamGameStatistic.GameID = Game.GameID
     WHERE TeamID = p_TeamID AND (
         (MONTH(Game.Date) >= 9 AND YEAR(Game.Date) = p_StartYear) OR
         (MONTH(Game.Date) <= 5 AND YEAR(Game.Date) = p_StartYear + 1)
     );
-END;
+END $$
 
 -- Get Team Season Statistics Procedure with Date Range
-DROP PROCEDURE IF EXISTS GetTeamSeasonStatisticsBetweenDates;
+DROP PROCEDURE IF EXISTS GetTeamSeasonStatisticsBetweenDates$$
 CREATE PROCEDURE GetTeamSeasonStatisticsBetweenDates(
     IN p_TeamID SMALLINT,
     IN p_StartDate DATE,
@@ -281,10 +272,10 @@ BEGIN
         JOIN Game ON TeamGameStatistic.GameID = Game.GameID
         WHERE TeamID = p_TeamID AND Game.Date BETWEEN p_StartDate AND p_EndDate;
     END IF;
-END;
+END $$ 
 
 -- Get Two Player's Season Averages for Academic Year (using the start year)
-DROP PROCEDURE IF EXISTS ComparePlayersSeasonAverages;
+DROP PROCEDURE IF EXISTS ComparePlayersSeasonAverages$$
 CREATE PROCEDURE ComparePlayersSeasonAverages(IN p_PlayerID1 SMALLINT, IN p_PlayerID2 SMALLINT, IN p_StartYear INT)
 BEGIN
     SELECT 
@@ -312,11 +303,11 @@ BEGIN
         (MONTH(Game.Date) <= 5 AND YEAR(Game.Date) = p_StartYear + 1)
     )
     GROUP BY PlayerID;
-END;
+END $$ 
 
 
 -- Finds the MVP of the Season for the Academic Year (using start year)
-DROP PROCEDURE IF EXISTS MVPofTheSeason;
+DROP PROCEDURE IF EXISTS MVPofTheSeason$$
 CREATE PROCEDURE MVPofTheSeason(IN p_SeasonStartYear INT)
 BEGIN
     SELECT 
@@ -334,12 +325,12 @@ BEGIN
     GROUP BY PlayerID
     ORDER BY TotalPoints DESC, TotalAssists DESC, TotalRebounds DESC, TotalSteals DESC, TotalBlocks DESC
     LIMIT 5;
-END;
+END $$ 
 
 -- Find the efficiency rating of a player for an academic year
 -- Formula: (PTS + REB + AST + STL + BLK − Missed FG − Missed FT - TO) / GP
 -- See Wikipedia page for efficiency ratings: https://en.wikipedia.org/wiki/Efficiency_(basketball)
-DROP PROCEDURE IF EXISTS TrackPlayerEfficiency;
+DROP PROCEDURE IF EXISTS TrackPlayerEfficiency$$
 CREATE PROCEDURE TrackPlayerEfficiency(IN p_PlayerID SMALLINT, IN p_StartYear INT)
 BEGIN
     SELECT 
@@ -357,14 +348,14 @@ BEGIN
         (MONTH(Game.Date) <= 5 AND YEAR(Game.Date) = p_StartYear + 1)
     )
     GROUP BY CONCAT(p_StartYear, '-', p_StartYear + 1);
-END;
+END $$ 
 
 -- Calculate Player Impact Estimate (PIE) for a given game
 -- Formula: (PTS + FGM + FTM - FGA - FTA + DREB + (.5 * OREB) + AST + STL + (.5 * BLK) - PF - TO) / 
 -- (GmPTS + GmFGM + GmFTM - GmFGA - GmFTA + GmDREB + (.5 * GmOREB) + GmAST + GmSTL + (.5 * GmBLK) - GmPF - GmTO)
 -- See NBAstuffer for PIE description: https://www.nbastuffer.com/analytics101/player-impact-estimate-pie/
 -- To clarify the abbreviations, paste into ChatGPT and ask for the full terms, it's too long to include here
-DROP PROCEDURE IF EXISTS CalculatePlayerPIE;
+DROP PROCEDURE IF EXISTS CalculatePlayerPIE$$
 CREATE PROCEDURE CalculatePlayerPIE(IN player_id SMALLINT, IN game_id SMALLINT)
 BEGIN
     DECLARE total_game_stats DOUBLE;
@@ -390,69 +381,56 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Game statistics cannot be zero.';
     ELSE
         SELECT player_stats / total_game_stats AS PlayerImpactEstimate;
-END IF;
-END
+    END IF;
+END $$
 
 
 
 -- Calculate Player Impact Estimate (PIE) for a given season
-DROP PROCEDURE IF EXISTS CalculateSeasonPlayerPIE;
+DROP PROCEDURE IF EXISTS CalculateSeasonPlayerPIE$$
 CREATE PROCEDURE CalculateSeasonPlayerPIE(
     IN p_PlayerID SMALLINT,
     IN p_StartYear INT
 )
 BEGIN
-    -- Temporary table to store individual game PIE values
-    CREATE TEMPORARY TABLE IF NOT EXISTS TempPIE (GamePIE DOUBLE);
+    -- Drop and recreate the temporary table to ensure it's clean
+    DROP TEMPORARY TABLE IF EXISTS TempPIE;
+    CREATE TEMPORARY TABLE TempPIE (GamePIE DOUBLE);
 
-    -- Find all relevant games within the academic year
-    DECLARE cur CURSOR FOR
-        SELECT GameID 
-        FROM Game
-        WHERE (MONTH(Date) >= 9 AND YEAR(Date) = p_StartYear) OR (MONTH(Date) <= 5 AND YEAR(Date) = p_StartYear + 1);
-    
-    DECLARE v_GameID SMALLINT;
-    DECLARE done INT DEFAULT FALSE;
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
-    
-    OPEN cur;
-    game_loop: LOOP
-        FETCH cur INTO v_GameID;
-        IF done THEN
-            LEAVE game_loop;
-        END IF;
+    -- Insert PIE calculations directly into TempPIE for relevant games
+    INSERT INTO TempPIE (GamePIE)
+    SELECT player_stats / total_game_stats AS PlayerImpactEstimate
+    FROM (
+        SELECT 
+            GameID,
+            (Points + FieldGoalsMade + FreeThrowsMade - FieldGoalsAttempted - FreeThrowsAttempted +
+            DefensiveRebounds + (OffensiveRebounds / 2) + Assists + Steals + (Blocks / 2) - 
+            PersonalFouls - Turnovers) AS player_stats,
+            (SUM(Points) + SUM(FieldGoalsMade) + SUM(FreeThrowsMade) - SUM(FieldGoalsAttempted) - SUM(FreeThrowsAttempted) +
+            SUM(DefensiveRebounds) + (SUM(OffensiveRebounds) / 2) + SUM(Assists) + SUM(Steals) + 
+            (SUM(Blocks) / 2) - SUM(PersonalFouls) - SUM(Turnovers)) AS total_game_stats
+        FROM PlayerGameStatistic
+        JOIN TeamGameStatistic USING (GameID)
+        JOIN Game ON PlayerGameStatistic.GameID = Game.GameID
+        WHERE PlayerID = p_PlayerID AND (
+            (MONTH(Date) >= 9 AND YEAR(Date) = p_StartYear) OR
+            (MONTH(Date) <= 5 AND YEAR(Date) = p_StartYear + 1)
+        )
+        GROUP BY GameID
+    ) AS GameStats
+    WHERE total_game_stats != 0;
 
-        -- Calculate PIE for each game and store in the temporary table
-        INSERT INTO TempPIE (GamePIE)
-        SELECT player_stats / total_game_stats AS PlayerImpactEstimate
-        FROM (
-            SELECT 
-                (Points + FieldGoalsMade + FreeThrowsMade - FieldGoalsAttempted - FreeThrowsAttempted +
-                DefensiveRebounds + (OffensiveRebounds/2) + Assists + Steals + (Blocks/2) - 
-                PersonalFouls - Turnovers) AS player_stats,
-                (SUM(TotalPoints) + SUM(FieldGoalsMade) + SUM(FreeThrowsMade) - SUM(FieldGoalsAttempted) - SUM(FreeThrowsAttempted) +
-                SUM(DefensiveRebounds) + (SUM(OffensiveRebounds)/2) + SUM(Assists) + SUM(Steals) + 
-                (SUM(Blocks)/2) - SUM(PersonalFouls) - SUM(Turnovers)) AS total_game_stats
-            FROM PlayerGameStatistic
-            JOIN TeamGameStatistic USING (GameID)
-            WHERE PlayerID = p_PlayerID AND GameID = v_GameID
-            GROUP BY GameID
-        ) AS GameStats
-        WHERE total_game_stats != 0;
-
-    END LOOP;
-    CLOSE cur;
-
+    -- Calculate the average of PIE from TempPIE and clean up
     SELECT AVG(GamePIE) AS SeasonPlayerImpactEstimate FROM TempPIE;
-    DROP TABLE TempPIE;
-END;
+    DROP TEMPORARY TABLE IF EXISTS TempPIE;
+END $$
 
 
 -- Custom formula to find the impact of a player on their team's performance in a given season
 -- The impact is measured by the player's scoring performance in games where the team won
 -- We are looking at how often the team wins when a player scores above their average.
 -- Returns the winning percentage when the player scores above their average for the season
-DROP PROCEDURE IF EXISTS GetPlayerSuccessImpact;
+DROP PROCEDURE IF EXISTS GetPlayerSuccessImpact$$
 CREATE PROCEDURE GetPlayerSuccessImpact(
     IN p_PlayerID SMALLINT,
     IN p_StartYear INT
@@ -464,8 +442,8 @@ BEGIN
 
     -- Calculate average points scored by the player for the given season and the number of games played
     SELECT 
-        AVG(Points) INTO avg_points,
-        COUNT(*) INTO games_played
+        AVG(Points), COUNT(*) 
+        INTO avg_points, games_played
     FROM PlayerGameStatistic
     JOIN Game ON PlayerGameStatistic.GameID = Game.GameID
     WHERE PlayerID = p_PlayerID
@@ -495,13 +473,13 @@ BEGIN
 
     -- Calculate the winning percentage when the player scores above their average for the season
     SELECT IF(games_played = 0, NULL, (games_won / games_played) * 100) AS WinningImpactPercentage;
-END
+END $$
 
 -- Get Top Scorers From a Specific Game Procedure
-DROP PROCEDURE IF EXISTS GetTopScorersInGame;
+DROP PROCEDURE IF EXISTS GetTopScorersInGame$$
 CREATE PROCEDURE GetTopScorersInGame(
     IN p_GameID SMALLINT,
-    IN p_Limit INT DEFAULT 5
+    IN p_Limit INT
 )
 BEGIN
     SELECT 
@@ -514,11 +492,11 @@ BEGIN
     WHERE ps.GameID = p_GameID
     ORDER BY ps.Points DESC
     LIMIT p_Limit;
-END;
+END $$ 
 
 -- Retrieve a log of all games played by a specific player
-DROP PROCEDURE IF EXISTS GetPlayerGameLog;
-CREATE PROCEDURE PlayerGameLogProcedure(IN p_PlayerID SMALLINT)
+DROP PROCEDURE IF EXISTS GetPlayerGameLog$$
+CREATE PROCEDURE GetPlayerGameLog(IN p_PlayerID SMALLINT)
 BEGIN
     SELECT 
         p.FirstName,
@@ -549,10 +527,10 @@ BEGIN
     JOIN Team t ON p.TeamID = t.TeamID
     WHERE pg.PlayerID = p_PlayerID
     ORDER BY g.Date DESC;
-END;
+END $$ 
 
 -- Ranks teams for a given season based on their win-loss record and point differential
-DROP PROCEDURE IF EXISTS SeasonalTeamRankingsProcedure;
+DROP PROCEDURE IF EXISTS SeasonalTeamRankingsProcedure$$
 CREATE PROCEDURE SeasonalTeamRankingsProcedure(IN p_StartYear INT)
 BEGIN
     SELECT 
@@ -573,15 +551,16 @@ BEGIN
         )
     GROUP BY t.TeamID
     ORDER BY Wins DESC, PointDifferential DESC;
-END;
+END $$ 
 
 -- Verify Points Procedure
 -- Finds if there is a discrepancy between the total points scored by players on a team and the total points recorded for the team in a game
-DROP PROCEDURE IF EXISTS VerifyPoints;
+DROP PROCEDURE IF EXISTS VerifyPoints$$
 CREATE PROCEDURE VerifyPoints(IN p_GameID SMALLINT, IN p_TeamID SMALLINT)
 BEGIN
-    DECLARE PlayerPoints INT DEFAULT 0;
-    DECLARE TeamTotalPoints INT DEFAULT 0;
+    DECLARE PlayerPoints INT;
+    DECLARE TeamTotalPoints INT;
+    DECLARE ErrorMessage VARCHAR(255);
 
     -- Calculate the total points scored by players in the given game
     SELECT SUM(COALESCE(FieldGoalsMade * 2 + ThreePointersMade * 3 + FreeThrowsMade, 0)) INTO PlayerPoints
@@ -595,26 +574,25 @@ BEGIN
 
     -- Check for nulls and mismatch
     IF PlayerPoints = 0 THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = CONCAT('Error: Player points total returns zero or null for TeamID: ', p_TeamID, ', GameID: ', p_GameID);
-    END IF;
-
-    IF TeamTotalPoints = 0 THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = CONCAT('Error: Team total points return zero or null for TeamID: ', p_TeamID, ', GameID: ', p_GameID);
+        SET ErrorMessage = CONCAT('Error: Player points total returns zero or null for TeamID: ', p_TeamID, ', GameID: ', p_GameID);
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = ErrorMessage;
+    ELSEIF TeamTotalPoints = 0 THEN
+        SET ErrorMessage = CONCAT('Error: Team total points return zero or null for TeamID: ', p_TeamID, ', GameID: ', p_GameID);
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = ErrorMessage;
+    ELSEIF PlayerPoints != TeamTotalPoints THEN
+        SET ErrorMessage = CONCAT('Error: Mismatch in points! Player total: ', PlayerPoints, ' vs Team total: ', TeamTotalPoints);
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = ErrorMessage;
     ELSE
-        IF PlayerPoints != TeamTotalPoints THEN
-            SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = CONCAT('Error: Mismatch in points! Player total: ', PlayerPoints, ' vs Team total: ', TeamTotalPoints);
-        ELSE
-            SELECT 'Points are consistent!' AS Message;
-        END IF;
+        SELECT 'Points are consistent!' AS Message;
     END IF;
-END;
+END$$
 
 -- Verify All Stats Procedure
 -- Finds discrepancies between all major statistical totals recorded for players and those recorded for their teams in a game
-DROP PROCEDURE IF EXISTS VerifyAllStats;
+DROP PROCEDURE IF EXISTS VerifyAllStats$$
 CREATE PROCEDURE VerifyAllStats(IN p_GameID SMALLINT, IN p_TeamID SMALLINT)
 BEGIN
     DECLARE PlayerFGMade, PlayerFGAttempted, Player3PMade, Player3PAttempted, PlayerFTMade, PlayerFTAttempted,
@@ -707,44 +685,46 @@ BEGIN
     ELSE
         SELECT 'All statistics are consistent!' AS Message;
     END IF;
-END;
+END $$ 
 
 
 -- Trigger to log player deletions
-DROP TRIGGER IF EXISTS LogDeletePlayer;
+DROP TRIGGER IF EXISTS LogDeletePlayer$$
 CREATE TRIGGER LogDeletePlayer
 AFTER DELETE ON Player
 FOR EACH ROW
 BEGIN
     INSERT INTO DeletionLog (EntityType, EntityID, DeletedAt, DeletedBy)
     VALUES ('Player', OLD.PlayerID, NOW(), CURRENT_USER());
-END;
+END $$ 
 
 -- Trigger to log team deletions
-DROP TRIGGER IF EXISTS LogDeleteTeam;
+DROP TRIGGER IF EXISTS LogDeleteTeam$$
 CREATE TRIGGER LogDeleteTeam
 AFTER DELETE ON Team
 FOR EACH ROW
 BEGIN
     INSERT INTO DeletionLog (EntityType, EntityID, DeletedAt, DeletedBy)
     VALUES ('Team', OLD.TeamID, NOW(), CURRENT_USER());
-END;
+END $$ 
 
 -- Trigger to log game deletions
-DROP TRIGGER IF EXISTS LogDeleteGame;
+DROP TRIGGER IF EXISTS LogDeleteGame$$
 CREATE TRIGGER LogDeleteGame
 AFTER DELETE ON Game
 FOR EACH ROW
 BEGIN
     INSERT INTO DeletionLog (EntityType, EntityID, DeletedAt, DeletedBy)
     VALUES ('Game', OLD.GameID, NOW(), CURRENT_USER());
-END;
+END $$ 
 
 -- Trigger to check for any stat discrepancy upon insert of a team game statistic entry
-DROP TRIGGER IF EXISTS trg_VerifyStatsAfterInsert;
+DROP TRIGGER IF EXISTS trg_VerifyStatsAfterInsert$$
 CREATE TRIGGER trg_VerifyStatsAfterInsert
 AFTER INSERT ON TeamGameStatistic
 FOR EACH ROW
 BEGIN
     CALL VerifyAllStats(NEW.GameID, NEW.TeamID);
-END;
+END $$ 
+
+DELIMITER ;
