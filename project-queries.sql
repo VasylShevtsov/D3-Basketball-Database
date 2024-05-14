@@ -139,8 +139,8 @@ END $$
 -- Get Player's Season Averages Procedure for Academic Year (using the start year)
 DROP PROCEDURE IF EXISTS GetPlayerSeasonAverages$$
 CREATE PROCEDURE GetPlayerSeasonAverages(
-    IN p_StartYear INT,
-    IN p_PlayerID SMALLINT
+    IN p_PlayerID SMALLINT,
+    IN p_StartYear INT
 )
 BEGIN
     SELECT 
