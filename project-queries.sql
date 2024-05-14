@@ -558,8 +558,9 @@ END $$
 DROP PROCEDURE IF EXISTS VerifyPoints$$
 CREATE PROCEDURE VerifyPoints(IN p_GameID SMALLINT, IN p_TeamID SMALLINT)
 BEGIN
-    DECLARE PlayerPoints INT DEFAULT 0;
-    DECLARE TeamTotalPoints INT DEFAULT 0;
+    DECLARE PlayerPoints INT;
+    DECLARE TeamTotalPoints INT;
+    DECLARE ErrorMessage VARCHAR(255);
 
     -- Calculate the total points scored by players in the given game
     SELECT SUM(COALESCE(FieldGoalsMade * 2 + ThreePointersMade * 3 + FreeThrowsMade, 0)) INTO PlayerPoints
@@ -573,22 +574,21 @@ BEGIN
 
     -- Check for nulls and mismatch
     IF PlayerPoints = 0 THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = CONCAT('Error: Player points total returns zero or null for TeamID: ', p_TeamID, ', GameID: ', p_GameID);
-    END IF;
-
-    IF TeamTotalPoints = 0 THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = CONCAT('Error: Team total points return zero or null for TeamID: ', p_TeamID, ', GameID: ', p_GameID);
+        SET ErrorMessage = CONCAT('Error: Player points total returns zero or null for TeamID: ', p_TeamID, ', GameID: ', p_GameID);
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = ErrorMessage;
+    ELSEIF TeamTotalPoints = 0 THEN
+        SET ErrorMessage = CONCAT('Error: Team total points return zero or null for TeamID: ', p_TeamID, ', GameID: ', p_GameID);
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = ErrorMessage;
+    ELSEIF PlayerPoints != TeamTotalPoints THEN
+        SET ErrorMessage = CONCAT('Error: Mismatch in points! Player total: ', PlayerPoints, ' vs Team total: ', TeamTotalPoints);
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = ErrorMessage;
     ELSE
-        IF PlayerPoints != TeamTotalPoints THEN
-            SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = CONCAT('Error: Mismatch in points! Player total: ', PlayerPoints, ' vs Team total: ', TeamTotalPoints);
-        ELSE
-            SELECT 'Points are consistent!' AS Message;
-        END IF;
+        SELECT 'Points are consistent!' AS Message;
     END IF;
-END $$ 
+END$$
 
 -- Verify All Stats Procedure
 -- Finds discrepancies between all major statistical totals recorded for players and those recorded for their teams in a game
