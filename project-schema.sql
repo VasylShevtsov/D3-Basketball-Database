@@ -1,5 +1,4 @@
 -- Title: D3 Basketball Database
--- File: Project Schema
 -- Authors: Aidan Von Buchwaldt, Basil Shevtsov, and Jai Deshpande
 
 CREATE TABLE Team (

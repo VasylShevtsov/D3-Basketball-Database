@@ -1,6 +1,3 @@
--- Title: D3 Basketball Database
--- File: Project Data for Players Table
--- Authors: Aidan Von Buchwaldt, Basil Shevtsov, and Jai Deshpande
 INSERT INTO Player (PlayerID, TeamID, FirstName, LastName, Position, HeightInches, Weight, HighSchool) VALUES (3799, 3, 'Brandon', 'Medina', 'Guard', 84, 177, 'Martinez, Mccoy and Jones');
 INSERT INTO Player (PlayerID, TeamID, FirstName, LastName, Position, HeightInches, Weight, HighSchool) VALUES (2409, 10, 'David', 'Lamb', 'Center', 66, 249, 'Thomas, Lewis and Adams');
 INSERT INTO Player (PlayerID, TeamID, FirstName, LastName, Position, HeightInches, Weight, HighSchool) VALUES (3210, 21, 'Andrew', 'Mason', 'Guard', 82, 185, 'Chavez-Owens');

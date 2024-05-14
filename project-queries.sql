@@ -1,5 +1,4 @@
 -- Title: D3 Basketball Database
--- File: Project Queries
 -- Authors: Aidan Von Buchwaldt, Basil Shevtsov, and Jai Deshpande
 -- Sources:
     -- MySQL Error Handling: 
@@ -16,7 +15,6 @@ DELIMITER $$
 -- Insert Player Procedure
 DROP PROCEDURE IF EXISTS NewPlayer$$
 CREATE PROCEDURE NewPlayer(
-    IN p_PlayerID SMALLINT,
     IN p_FirstName VARCHAR(40),
     IN p_LastName VARCHAR(40),
     IN p_TeamID SMALLINT,
@@ -26,8 +24,8 @@ CREATE PROCEDURE NewPlayer(
     IN p_HighSchool VARCHAR(40)
 )
 BEGIN
-    INSERT INTO Player (PlayerID, FirstName, LastName, TeamID, Position, HeightInches, Weight, HighSchool)
-    VALUES (p_PlayerID, p_FirstName, p_LastName, p_TeamID, p_Position, p_HeightInches, p_Weight, p_HighSchool);
+    INSERT INTO Player (FirstName, LastName, TeamID, Position, HeightInches, Weight, HighSchool)
+    VALUES (p_FirstName, p_LastName, p_TeamID, p_Position, p_HeightInches, p_Weight, p_HighSchool);
 END $$ 
 
 
@@ -41,25 +39,6 @@ BEGIN
     WHERE PlayerID = p_PlayerID;
 END $$ 
 
--- Delete Team Procedure
-DROP PROCEDURE IF EXISTS DeleteTeam$$
-CREATE PROCEDURE DeleteTeam(
-    IN p_TeamID SMALLINT
-)
-BEGIN
-    DELETE FROM Team
-    WHERE TeamID = p_TeamID;
-END $$
-
--- Delete Game Procedure
-DROP PROCEDURE IF EXISTS DeleteGame$$
-CREATE PROCEDURE DeleteGame(
-    IN p_GameID SMALLINT
-)
-BEGIN
-    DELETE FROM Game
-    WHERE GameID = p_GameID;
-END $$
 
 -- Update Player Procedure
 DROP PROCEDURE IF EXISTS UpdatePlayer$$
@@ -139,8 +118,8 @@ END $$
 -- Get Player's Season Averages Procedure for Academic Year (using the start year)
 DROP PROCEDURE IF EXISTS GetPlayerSeasonAverages$$
 CREATE PROCEDURE GetPlayerSeasonAverages(
-    IN p_PlayerID SMALLINT,
-    IN p_StartYear INT
+    IN p_StartYear INT,
+    IN p_PlayerID SMALLINT
 )
 BEGIN
     SELECT 
@@ -260,9 +239,9 @@ BEGIN
     );
 END $$
 
--- Get Team Statistics Between Dates 
-DROP PROCEDURE IF EXISTS GetTeamStatisticsBetweenDates$$
-CREATE PROCEDURE GetTeamStatisticsBetweenDates(
+-- Get Team Season Statistics Procedure with Date Range
+DROP PROCEDURE IF EXISTS GetTeamSeasonStatisticsBetweenDates$$
+CREATE PROCEDURE GetTeamSeasonStatisticsBetweenDates(
     IN p_TeamID SMALLINT,
     IN p_StartDate DATE,
     IN p_EndDate DATE
@@ -357,20 +336,19 @@ BEGIN
     SELECT 
         CONCAT(p_StartYear, '-', p_StartYear + 1) AS Season,
         SUM(
-            pgs.Points + pgs.Rebounds + pgs.Assists + pgs.Steals + pgs.Blocks 
-            - (pgs.FieldGoalsAttempted - pgs.FieldGoalsMade)
-            - (pgs.FreeThrowsAttempted - pgs.FreeThrowsMade)
-            - pgs.Turnovers
-        ) / COUNT(pgs.GameID) AS EfficiencyRating
-    FROM PlayerGameStatistic pgs
-    JOIN Game g ON pgs.GameID = g.GameID
-    WHERE pgs.PlayerID = p_PlayerID AND (
-        (MONTH(g.Date) >= 9 AND YEAR(g.Date) = p_StartYear) OR
-        (MONTH(g.Date) <= 5 AND YEAR(g.Date) = p_StartYear + 1)
+            Points + Rebounds + Assists + Steals + Blocks 
+            - (FieldGoalsAttempted - FieldGoalsMade)
+            - (FreeThrowsAttempted - FreeThrowsMade)
+            - Turnovers
+        ) / COUNT(GameID) AS EfficiencyRating
+    FROM PlayerGameStatistic
+    JOIN Game ON PlayerGameStatistic.GameID = Game.GameID
+    WHERE PlayerID = p_PlayerID AND (
+        (MONTH(Game.Date) >= 9 AND YEAR(Game.Date) = p_StartYear) OR
+        (MONTH(Game.Date) <= 5 AND YEAR(Game.Date) = p_StartYear + 1)
     )
     GROUP BY CONCAT(p_StartYear, '-', p_StartYear + 1);
 END $$ 
-
 
 -- Calculate Player Impact Estimate (PIE) for a given game
 -- Formula: (PTS + FGM + FTM - FGA - FTA + DREB + (.5 * OREB) + AST + STL + (.5 * BLK) - PF - TO) / 
@@ -415,31 +393,34 @@ CREATE PROCEDURE CalculateSeasonPlayerPIE(
     IN p_StartYear INT
 )
 BEGIN
+    -- Drop and recreate the temporary table to ensure it's clean
     DROP TEMPORARY TABLE IF EXISTS TempPIE;
     CREATE TEMPORARY TABLE TempPIE (GamePIE DOUBLE);
 
+    -- Insert PIE calculations directly into TempPIE for relevant games
     INSERT INTO TempPIE (GamePIE)
     SELECT player_stats / total_game_stats AS PlayerImpactEstimate
     FROM (
         SELECT 
-            pgs.GameID,
-            (pgs.Points + pgs.FieldGoalsMade + pgs.FreeThrowsMade - pgs.FieldGoalsAttempted - pgs.FreeThrowsAttempted +
-            pgs.DefensiveRebounds + (pgs.OffensiveRebounds / 2) + pgs.Assists + pgs.Steals + (pgs.Blocks / 2) - 
-            pgs.PersonalFouls - pgs.Turnovers) AS player_stats,
-            (SUM(tgs.TotalPoints) + SUM(tgs.FieldGoalsMade) + SUM(tgs.FreeThrowsMade) - SUM(tgs.FieldGoalsAttempted) - SUM(tgs.FreeThrowsAttempted) +
-            SUM(tgs.DefensiveRebounds) + (SUM(tgs.OffensiveRebounds) / 2) + SUM(tgs.Assists) + SUM(tgs.Steals) + 
-            (SUM(tgs.Blocks) / 2) - SUM(tgs.PersonalFouls) - SUM(tgs.Turnovers)) AS total_game_stats
-        FROM PlayerGameStatistic pgs
-        JOIN TeamGameStatistic tgs USING (GameID)
-        JOIN Game g ON pgs.GameID = g.GameID
-        WHERE pgs.PlayerID = p_PlayerID AND (
-            (MONTH(g.Date) >= 9 AND YEAR(g.Date) = p_StartYear) OR
-            (MONTH(g.Date) <= 5 AND YEAR(g.Date) = p_StartYear + 1)
+            GameID,
+            (Points + FieldGoalsMade + FreeThrowsMade - FieldGoalsAttempted - FreeThrowsAttempted +
+            DefensiveRebounds + (OffensiveRebounds / 2) + Assists + Steals + (Blocks / 2) - 
+            PersonalFouls - Turnovers) AS player_stats,
+            (SUM(Points) + SUM(FieldGoalsMade) + SUM(FreeThrowsMade) - SUM(FieldGoalsAttempted) - SUM(FreeThrowsAttempted) +
+            SUM(DefensiveRebounds) + (SUM(OffensiveRebounds) / 2) + SUM(Assists) + SUM(Steals) + 
+            (SUM(Blocks) / 2) - SUM(PersonalFouls) - SUM(Turnovers)) AS total_game_stats
+        FROM PlayerGameStatistic
+        JOIN TeamGameStatistic USING (GameID)
+        JOIN Game ON PlayerGameStatistic.GameID = Game.GameID
+        WHERE PlayerID = p_PlayerID AND (
+            (MONTH(Date) >= 9 AND YEAR(Date) = p_StartYear) OR
+            (MONTH(Date) <= 5 AND YEAR(Date) = p_StartYear + 1)
         )
-        GROUP BY pgs.GameID
+        GROUP BY GameID
     ) AS GameStats
     WHERE total_game_stats != 0;
 
+    -- Calculate the average of PIE from TempPIE and clean up
     SELECT AVG(GamePIE) AS SeasonPlayerImpactEstimate FROM TempPIE;
     DROP TEMPORARY TABLE IF EXISTS TempPIE;
 END $$
@@ -497,7 +478,8 @@ END $$
 -- Get Top Scorers From a Specific Game Procedure
 DROP PROCEDURE IF EXISTS GetTopScorersInGame$$
 CREATE PROCEDURE GetTopScorersInGame(
-    IN p_GameID SMALLINT
+    IN p_GameID SMALLINT,
+    IN p_Limit INT
 )
 BEGIN
     SELECT 
@@ -508,7 +490,8 @@ BEGIN
     FROM PlayerGameStatistic ps
     JOIN Player p ON ps.PlayerID = p.PlayerID
     WHERE ps.GameID = p_GameID
-    ORDER BY ps.Points DESC;
+    ORDER BY ps.Points DESC
+    LIMIT p_Limit;
 END $$ 
 
 -- Retrieve a log of all games played by a specific player
@@ -547,8 +530,8 @@ BEGIN
 END $$ 
 
 -- Ranks teams for a given season based on their win-loss record and point differential
-DROP PROCEDURE IF EXISTS SeasonalTeamRanking$$
-CREATE PROCEDURE SeasonalTeamRanking(IN p_StartYear INT)
+DROP PROCEDURE IF EXISTS SeasonalTeamRankingsProcedure$$
+CREATE PROCEDURE SeasonalTeamRankingsProcedure(IN p_StartYear INT)
 BEGIN
     SELECT 
         t.TeamName,
