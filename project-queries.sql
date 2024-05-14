@@ -415,34 +415,31 @@ CREATE PROCEDURE CalculateSeasonPlayerPIE(
     IN p_StartYear INT
 )
 BEGIN
-    -- Drop and recreate the temporary table to ensure it's clean
     DROP TEMPORARY TABLE IF EXISTS TempPIE;
     CREATE TEMPORARY TABLE TempPIE (GamePIE DOUBLE);
 
-    -- Insert PIE calculations directly into TempPIE for relevant games
     INSERT INTO TempPIE (GamePIE)
     SELECT player_stats / total_game_stats AS PlayerImpactEstimate
     FROM (
         SELECT 
-            GameID,
-            (Points + FieldGoalsMade + FreeThrowsMade - FieldGoalsAttempted - FreeThrowsAttempted +
-            DefensiveRebounds + (OffensiveRebounds / 2) + Assists + Steals + (Blocks / 2) - 
-            PersonalFouls - Turnovers) AS player_stats,
-            (SUM(Points) + SUM(FieldGoalsMade) + SUM(FreeThrowsMade) - SUM(FieldGoalsAttempted) - SUM(FreeThrowsAttempted) +
-            SUM(DefensiveRebounds) + (SUM(OffensiveRebounds) / 2) + SUM(Assists) + SUM(Steals) + 
-            (SUM(Blocks) / 2) - SUM(PersonalFouls) - SUM(Turnovers)) AS total_game_stats
-        FROM PlayerGameStatistic
-        JOIN TeamGameStatistic USING (GameID)
-        JOIN Game ON PlayerGameStatistic.GameID = Game.GameID
-        WHERE PlayerID = p_PlayerID AND (
-            (MONTH(Date) >= 9 AND YEAR(Date) = p_StartYear) OR
-            (MONTH(Date) <= 5 AND YEAR(Date) = p_StartYear + 1)
+            pgs.GameID,
+            (pgs.Points + pgs.FieldGoalsMade + pgs.FreeThrowsMade - pgs.FieldGoalsAttempted - pgs.FreeThrowsAttempted +
+            pgs.DefensiveRebounds + (pgs.OffensiveRebounds / 2) + pgs.Assists + pgs.Steals + (pgs.Blocks / 2) - 
+            pgs.PersonalFouls - pgs.Turnovers) AS player_stats,
+            (SUM(tgs.TotalPoints) + SUM(tgs.FieldGoalsMade) + SUM(tgs.FreeThrowsMade) - SUM(tgs.FieldGoalsAttempted) - SUM(tgs.FreeThrowsAttempted) +
+            SUM(tgs.DefensiveRebounds) + (SUM(tgs.OffensiveRebounds) / 2) + SUM(tgs.Assists) + SUM(tgs.Steals) + 
+            (SUM(tgs.Blocks) / 2) - SUM(tgs.PersonalFouls) - SUM(tgs.Turnovers)) AS total_game_stats
+        FROM PlayerGameStatistic pgs
+        JOIN TeamGameStatistic tgs USING (GameID)
+        JOIN Game g ON pgs.GameID = g.GameID
+        WHERE pgs.PlayerID = p_PlayerID AND (
+            (MONTH(g.Date) >= 9 AND YEAR(g.Date) = p_StartYear) OR
+            (MONTH(g.Date) <= 5 AND YEAR(g.Date) = p_StartYear + 1)
         )
-        GROUP BY GameID
+        GROUP BY pgs.GameID
     ) AS GameStats
     WHERE total_game_stats != 0;
 
-    -- Calculate the average of PIE from TempPIE and clean up
     SELECT AVG(GamePIE) AS SeasonPlayerImpactEstimate FROM TempPIE;
     DROP TEMPORARY TABLE IF EXISTS TempPIE;
 END $$
